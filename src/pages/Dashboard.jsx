@@ -1,4 +1,4 @@
-import React, { useEffect, useState, Suspense, lazy } from "react";
+import React, { useState } from "react";
 import { blockchainAPI } from "../components/utils/blockchain";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,82 +22,14 @@ import {
   Clock,
   Zap,
   RefreshCw,
-  AlertCircle,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLanguage } from "../components/contexts/LanguageContext";
-
-// Lazy load heavy components
-const DexPairsWidget = lazy(() => import("../components/dashboard/DexPairsWidget"));
-const TokenActivityWidget = lazy(() => import("../components/dashboard/TokenActivityWidget"));
-
-// Error Boundary Component
-class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error("Widget error:", error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <Card className="border-none shadow-lg">
-          <CardContent className="p-6">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Failed to load this widget. {this.state.error?.message || ""}
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    return this.props.children;
-  }
-}
-
-// Loading component for lazy-loaded widgets
-const WidgetSkeleton = () => (
-  <Card className="border-none shadow-lg">
-    <CardHeader>
-      <Skeleton className="h-6 w-48" />
-    </CardHeader>
-    <CardContent>
-      <div className="space-y-3">
-        {Array(5)
-          .fill(0)
-          .map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
-          ))}
-      </div>
-    </CardContent>
-  </Card>
-);
 
 export default function Dashboard() {
   const [autoRefresh, setAutoRefresh] = useState(false);
-  const [showWidgets, setShowWidgets] = useState(false);
   const { t } = useLanguage();
-
-  // Load widgets after 1 second to ensure core content loads first
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowWidgets(true);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const { data: height, isLoading: heightLoading } = useQuery({
     queryKey: ["height"],
@@ -258,23 +190,6 @@ export default function Dashboard() {
             </div>
           </CardContent>
         </Card>
-      )}
-
-      {/* Lazy-loaded Widgets */}
-      {showWidgets && (
-        <>
-          <ErrorBoundary>
-            <Suspense fallback={<WidgetSkeleton />}>
-              <TokenActivityWidget />
-            </Suspense>
-          </ErrorBoundary>
-
-          <ErrorBoundary>
-            <Suspense fallback={<WidgetSkeleton />}>
-              <DexPairsWidget />
-            </Suspense>
-          </ErrorBoundary>
-        </>
       )}
 
       {/* Recent Blocks */}
