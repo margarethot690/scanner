@@ -7,7 +7,7 @@ const BLOCKS_PER_SNAPSHOT = 30;
 const ATOMIC_UNITS = 100000000; // 10^8 - DCC has 8 decimals
 
 // Helper function to make API requests with retry logic
-async function apiRequest(url, retries = 3) {
+async function apiRequest(url: string, retries = 3) {
   for (let i = 0; i < retries; i++) {
     try {
       const response = await fetch(url, { 
@@ -30,13 +30,13 @@ async function apiRequest(url, retries = 3) {
   }
 }
 
-async function calculateCRCoinMetrics(blocks, nodeUrl) {
+async function calculateCRCoinMetrics(blocks: any[], nodeUrl: string) {
   const crcMetrics = {
     totalTransferVolume: 0,
     transferAmounts: [],
     transferCount: 0,
-    currentPeriodSenders: new Set(),
-    currentPeriodRecipients: new Set(),
+    currentPeriodSenders: new Set<string>(),
+    currentPeriodRecipients: new Set<string>(),
   };
 
   // Process blocks for CR Coin transfers
@@ -84,7 +84,7 @@ async function calculateCRCoinMetrics(blocks, nodeUrl) {
     // Get orderbook to find active pairs
     const orderbook = await apiRequest("https://mainnet-matcher.decentralchain.io/matcher/orderbook");
     const crcPairs = orderbook?.matcherPublicKey ? 
-      (orderbook.pairs || []).filter(p => 
+      (orderbook.pairs || []).filter((p: { amountAsset: string; priceAsset: string; }) => 
         p.amountAsset === CR_COIN_ASSET_ID || p.priceAsset === CR_COIN_ASSET_ID
       ) : [];
     
@@ -118,10 +118,10 @@ async function calculateCRCoinMetrics(blocks, nodeUrl) {
         
         console.log(`✓ Fetched CRC/DCC trading data: price=${tradingData.lastPrice}, volume=${tradingData.tradingVolume24h}, trades=${tradingData.tradesCount}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log("Could not fetch CRC/DCC pair data:", error.message);
     }
-  } catch (error) {
+  } catch (error: any) {
     console.log("Could not fetch matcher data:", error.message);
   }
 
@@ -136,7 +136,7 @@ async function calculateCRCoinMetrics(blocks, nodeUrl) {
   };
 }
 
-Deno.serve(async (req) => {
+Deno.serve(async (req: Request) => {
   const startTime = Date.now();
   
   try {
@@ -209,7 +209,7 @@ Deno.serve(async (req) => {
     try {
       blocks = await apiRequest(seqUrl);
       console.log(`✓ Successfully fetched ${blocks.length} blocks`);
-    } catch (error) {
+    } catch (error: any) {
       console.error(`✗ Failed to fetch blocks: ${error.message}`);
       console.error(`Error details:`, error);
       throw new Error(`Failed to fetch blocks from ${seqUrl}: ${error.message}`);
@@ -223,7 +223,7 @@ Deno.serve(async (req) => {
     const snapshotTimestamp = blocks[blocks.length - 1]?.timestamp || Date.now();
 
     // Calculate block time statistics
-    const blockTimes = [];
+    const blockTimes: number[] = [];
     for (let i = 1; i < blocks.length; i++) {
       const timeDiff = (blocks[i].timestamp - blocks[i - 1].timestamp) / 1000;
       if (timeDiff > 0) blockTimes.push(timeDiff);
@@ -239,7 +239,7 @@ Deno.serve(async (req) => {
     const stdDeviationBlockTime = Math.sqrt(variance);
 
     // Block time distribution
-    const blockTimeDistribution = {};
+    const blockTimeDistribution: Record<string, number> = {};
     for (const time of blockTimes) {
       const bucket = `${Math.floor(time / 10) * 10}-${Math.floor(time / 10) * 10 + 10}s`;
       blockTimeDistribution[bucket] = (blockTimeDistribution[bucket] || 0) + 1;
@@ -247,26 +247,26 @@ Deno.serve(async (req) => {
 
     // Transaction statistics
     let totalTxs = 0;
-    const txPerBlock = [];
+    const txPerBlock: number[] = [];
     let emptyBlocks = 0;
-    const blockSizes = [];
+    const blockSizes: number[] = [];
     let totalDataProcessed = 0;
-    const transactionTypeDistribution = {};
-    const generators = {};
+    const transactionTypeDistribution: Record<number, { count: number, totalFees: number }> = {};
+    const generators: Record<string, number> = {};
     let totalRewards = 0;
     let totalFees = 0;
-    const transactionFees = [];
-    const transactionSizes = [];
+    const transactionFees: number[] = [];
+    const transactionSizes: number[] = [];
     let totalTransactionVolumeNative = 0;
-    const transferAmounts = [];
-    const issueAssetFees = [];
-    const leaseAmounts = [];
+    const transferAmounts: number[] = [];
+    const issueAssetFees: number[] = [];
+    const leaseAmounts: number[] = [];
     let dataTransactionCount = 0;
     let invokeScriptCount = 0;
     let largestSingleTransaction = 0;
-    const uniqueSenders = new Set();
-    const uniqueRecipients = new Set();
-    const assetActivity = {};
+    const uniqueSenders = new Set<string>();
+    const uniqueRecipients = new Set<string>();
+    const assetActivity: Record<string, { transactionCount: number, totalVolume: number }> = {};
     const hourlyActivity = Array(24).fill(0).map((_, i) => ({ hour: i, transactions: 0, blocks: 0 }));
     const dailyActivity = Array(7).fill(0).map((_, i) => ({ day: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][i], transactions: 0, blocks: 0 }));
 
@@ -368,7 +368,7 @@ Deno.serve(async (req) => {
     }
 
     // Block size distribution
-    const blockSizeDistribution = {};
+    const blockSizeDistribution: Record<string, number> = {};
     for (const size of blockSizes) {
       // Buckets by 10KB
       const bucket = `${Math.floor(size / 10000) * 10}k-${Math.floor(size / 10000) * 10 + 10}k`;
@@ -423,10 +423,10 @@ Deno.serve(async (req) => {
     const txBurstiness = Math.sqrt(txVariance);
     
     // Generator statistics (top generators and Gini coefficient for decentralization)
-    const generatorList = Object.entries(generators).map(([address, blocks]) => ({
+    const generatorList = Object.entries(generators).map(([address, blocks_generated]) => ({
       address,
-      blocks_generated: blocks,
-      percentage: (blocks / blocksAnalyzed) * 100
+      blocks_generated,
+      percentage: (blocks_generated / blocksAnalyzed) * 100
     })).sort((a, b) => b.blocks_generated - a.blocks_generated);
     
     const topGenerators = generatorList.slice(0, 10);
@@ -456,7 +456,7 @@ Deno.serve(async (req) => {
       .slice(0, 20);
     
     // Total value transferred by asset - convert for DCC
-    const totalValueTransferredByAsset = {};
+    const totalValueTransferredByAsset: Record<string, number> = {};
     Object.entries(assetActivity).forEach(([assetId, data]) => {
       totalValueTransferredByAsset[assetId] = (assetId === "DCC" || assetId === "WAVES")
         ? data.totalVolume / ATOMIC_UNITS 
@@ -480,7 +480,7 @@ Deno.serve(async (req) => {
     // Fetch peer information
     let connectedPeers = 0;
     let totalKnownPeers = 0;
-    let peerVersionDistribution = [];
+    let peerVersionDistribution: { version: string; count: number; }[] = [];
     let nodeVersion = "unknown";
     
     try {
@@ -491,7 +491,7 @@ Deno.serve(async (req) => {
       totalKnownPeers = allPeersData?.peers?.length || 0;
       
       // Peer version distribution
-      const versionCounts = {};
+      const versionCounts: Record<string, number> = {};
       if (peersData?.peers) {
         for (const peer of peersData.peers) {
           const version = peer.applicationVersion || "unknown";
@@ -505,7 +505,7 @@ Deno.serve(async (req) => {
       
       const versionData = await apiRequest(`${nodeUrl}/node/version`);
       nodeVersion = versionData?.version || "unknown";
-    } catch (error) {
+    } catch (error: any) {
       console.log("Could not fetch peer data:", error.message);
     }
     
@@ -522,33 +522,33 @@ Deno.serve(async (req) => {
           previousSnapshot = olderSnapshots.sort((a, b) => b.snapshot_height - a.snapshot_height)[0];
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log('No previous snapshot found or error fetching:', error.message);
       previousSnapshot = null;
     }
 
     // Cumulative unique senders and recipients
-    let previousSendersSet = new Set();
-    let previousRecipientsSet = new Set();
+    let previousSendersSet = new Set<string>();
+    let previousRecipientsSet = new Set<string>();
     
     // If there's a previous snapshot, get its cumulative data
     if (previousSnapshot) {
       console.log(`Found previous snapshot at height ${previousSnapshot.snapshot_height}`);
       
       if (previousSnapshot.crc_unique_senders_addresses && Array.isArray(previousSnapshot.crc_unique_senders_addresses)) {
-        previousSendersSet = new Set(previousSnapshot.crc_unique_senders_addresses);
+        previousSendersSet = new Set<string>(previousSnapshot.crc_unique_senders_addresses);
       }
       
       if (previousSnapshot.crc_unique_recipients_addresses && Array.isArray(previousSnapshot.crc_unique_recipients_addresses)) {
-        previousRecipientsSet = new Set(previousSnapshot.crc_unique_recipients_addresses);
+        previousRecipientsSet = new Set<string>(previousSnapshot.crc_unique_recipients_addresses);
       }
     } else {
       console.log('No previous snapshot found - starting cumulative counts from zero');
     }
 
     // Merge current period with previous cumulative
-    const cumulativeSenders = new Set([...previousSendersSet, ...crcMetrics.currentPeriodSenders]);
-    const cumulativeRecipients = new Set([...previousRecipientsSet, ...crcMetrics.currentPeriodRecipients]);
+    const cumulativeSenders = new Set<string>([...previousSendersSet, ...crcMetrics.currentPeriodSenders]);
+    const cumulativeRecipients = new Set<string>([...previousRecipientsSet, ...crcMetrics.currentPeriodRecipients]);
     
     // New users in this period
     const newSendersThisPeriod = [...crcMetrics.currentPeriodSenders]
@@ -689,7 +689,7 @@ Deno.serve(async (req) => {
       message: `Snapshot generated successfully for height ${snapshotHeight}`
     });
     
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error generating snapshot:', error);
     console.error('Stack trace:', error.stack);
     return Response.json({ 
