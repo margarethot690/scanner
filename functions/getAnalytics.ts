@@ -1,5 +1,4 @@
-
-import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 Deno.serve(async (req) => {
   try {
@@ -82,7 +81,11 @@ Deno.serve(async (req) => {
     // ============================================
     // 1. HISTORICAL BLOCKCHAIN ANALYTICS
     // ============================================
-    const allSnapshots = await base44.asServiceRole.entities.BlockchainSnapshot.list('-snapshot_height');
+    const allSnapshotsResult = await base44.asServiceRole.entities.BlockchainSnapshot.list('-snapshot_height');
+    
+    // FIX: Ensure allSnapshots is always an array
+    const allSnapshots = Array.isArray(allSnapshotsResult) ? allSnapshotsResult : [];
+    
     const filteredSnapshots = allSnapshots.filter(s => 
       s.snapshot_timestamp >= startTimestamp && s.snapshot_timestamp <= endTimestamp
     );
@@ -105,7 +108,7 @@ Deno.serve(async (req) => {
     
     const historicalBlockchainAnalytics = {
       totalSnapshots: filteredSnapshots.length,
-      aggregatedTotals, // <--- NEW: Add aggregated totals here
+      aggregatedTotals,
       latestSnapshot: filteredSnapshots[0] || null,
       avgTPS: filteredSnapshots.length > 0 
         ? filteredSnapshots.reduce((sum, s) => sum + (s.tps || 0), 0) / filteredSnapshots.length 
@@ -179,7 +182,9 @@ Deno.serve(async (req) => {
     // ============================================
     // 3. WEBSITE METRICS
     // ============================================
-    const allPageViews = await base44.asServiceRole.entities.PageView.list('-created_date');
+    const allPageViewsResult = await base44.asServiceRole.entities.PageView.list('-created_date');
+    const allPageViews = Array.isArray(allPageViewsResult) ? allPageViewsResult : [];
+    
     const filteredPageViews = allPageViews.filter(pv => {
       const pvDate = new Date(pv.created_date);
       return pvDate >= startDate && pvDate <= endDate;
@@ -273,7 +278,9 @@ Deno.serve(async (req) => {
     // ============================================
     // 4. PLATFORM ANALYTICS
     // ============================================
-    const allUsers = await base44.asServiceRole.entities.User.list();
+    const allUsersResult = await base44.asServiceRole.entities.User.list();
+    const allUsers = Array.isArray(allUsersResult) ? allUsersResult : [];
+    
     const recentlyActiveUsers = allUsers.filter(u => {
       const lastActive = new Date(u.updated_date);
       return lastActive >= startDate && lastActive <= endDate;
@@ -296,7 +303,9 @@ Deno.serve(async (req) => {
     // ============================================
     // 5. WITHDRAWAL ANALYTICS
     // ============================================
-    const allWithdrawals = await base44.asServiceRole.entities.WithdrawalRequest.list('-created_date');
+    const allWithdrawalsResult = await base44.asServiceRole.entities.WithdrawalRequest.list('-created_date');
+    const allWithdrawals = Array.isArray(allWithdrawalsResult) ? allWithdrawalsResult : [];
+    
     const filteredWithdrawals = allWithdrawals.filter(w => {
       const wDate = new Date(w.created_date);
       return wDate >= startDate && wDate <= endDate;
@@ -324,7 +333,9 @@ Deno.serve(async (req) => {
     // ============================================
     // 6. LOGO REQUEST ANALYTICS
     // ============================================
-    const allLogoRequests = await base44.asServiceRole.entities.AssetLogoRequest.list('-created_date');
+    const allLogoRequestsResult = await base44.asServiceRole.entities.AssetLogoRequest.list('-created_date');
+    const allLogoRequests = Array.isArray(allLogoRequestsResult) ? allLogoRequestsResult : [];
+    
     const filteredLogoRequests = allLogoRequests.filter(lr => {
       const lrDate = new Date(lr.created_date);
       return lrDate >= startDate && lrDate <= endDate;
@@ -353,7 +364,6 @@ Deno.serve(async (req) => {
       dateRange: {
         start: startDate.toISOString(),
         end: endDate.toISOString(),
-        // Include the original parameters for reference
         ...(startDateParam && endDateParam 
           ? { start_date: startDateParam, end_date: endDateParam }
           : { timeRange }

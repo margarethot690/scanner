@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 const BLOCKS_PER_SNAPSHOT = 30;
 
@@ -12,9 +12,12 @@ Deno.serve(async (req) => {
     }
 
     // Fetch all existing snapshots to find the lowest height
-    const allSnapshots = await base44.asServiceRole.entities.BlockchainSnapshot.list();
+    const allSnapshotsResult = await base44.asServiceRole.entities.BlockchainSnapshot.list();
     
-    if (!allSnapshots || allSnapshots.length === 0) {
+    // FIX: Ensure allSnapshots is always an array
+    const allSnapshots = Array.isArray(allSnapshotsResult) ? allSnapshotsResult : [];
+    
+    if (allSnapshots.length === 0) {
       // No snapshots exist yet, start from current height
       return Response.json({
         success: false,
