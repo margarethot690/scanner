@@ -81,8 +81,8 @@ Deno.serve(async (req) => {
     // ============================================
     // 1. HISTORICAL BLOCKCHAIN ANALYTICS
     // ============================================
-    // CRITICAL: Limit to 500 snapshots to avoid 4MB response size limit
-    const allSnapshots = await base44.asServiceRole.entities.BlockchainSnapshot.list('-snapshot_height', 500);
+    // CRITICAL: Limit to 1000 snapshots to avoid 4MB response size limit
+    const allSnapshots = await base44.asServiceRole.entities.BlockchainSnapshot.list('-snapshot_height', 1000);
     console.log(`Fetched ${allSnapshots.length} blockchain snapshots from database`);
     
     const filteredSnapshots = allSnapshots.filter(s => 
