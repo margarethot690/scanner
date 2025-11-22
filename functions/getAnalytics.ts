@@ -83,8 +83,15 @@ Deno.serve(async (req) => {
     // ============================================
     const allSnapshotsResult = await base44.asServiceRole.entities.BlockchainSnapshot.list('-snapshot_height');
     
-    // FIX: Ensure allSnapshots is always an array
-    const allSnapshots = Array.isArray(allSnapshotsResult) ? allSnapshotsResult : [];
+    // FIX: Handle all possible response formats
+    let allSnapshots = [];
+    if (Array.isArray(allSnapshotsResult)) {
+      allSnapshots = allSnapshotsResult;
+    } else if (allSnapshotsResult?.data && Array.isArray(allSnapshotsResult.data)) {
+      allSnapshots = allSnapshotsResult.data;
+    } else if (allSnapshotsResult) {
+      console.warn('Unexpected snapshot result format:', typeof allSnapshotsResult);
+    }
     
     const filteredSnapshots = allSnapshots.filter(s => 
       s.snapshot_timestamp >= startTimestamp && s.snapshot_timestamp <= endTimestamp
@@ -183,7 +190,12 @@ Deno.serve(async (req) => {
     // 3. WEBSITE METRICS
     // ============================================
     const allPageViewsResult = await base44.asServiceRole.entities.PageView.list('-created_date');
-    const allPageViews = Array.isArray(allPageViewsResult) ? allPageViewsResult : [];
+    let allPageViews = [];
+    if (Array.isArray(allPageViewsResult)) {
+      allPageViews = allPageViewsResult;
+    } else if (allPageViewsResult?.data && Array.isArray(allPageViewsResult.data)) {
+      allPageViews = allPageViewsResult.data;
+    }
     
     const filteredPageViews = allPageViews.filter(pv => {
       const pvDate = new Date(pv.created_date);
@@ -279,7 +291,12 @@ Deno.serve(async (req) => {
     // 4. PLATFORM ANALYTICS
     // ============================================
     const allUsersResult = await base44.asServiceRole.entities.User.list();
-    const allUsers = Array.isArray(allUsersResult) ? allUsersResult : [];
+    let allUsers = [];
+    if (Array.isArray(allUsersResult)) {
+      allUsers = allUsersResult;
+    } else if (allUsersResult?.data && Array.isArray(allUsersResult.data)) {
+      allUsers = allUsersResult.data;
+    }
     
     const recentlyActiveUsers = allUsers.filter(u => {
       const lastActive = new Date(u.updated_date);
@@ -304,7 +321,12 @@ Deno.serve(async (req) => {
     // 5. WITHDRAWAL ANALYTICS
     // ============================================
     const allWithdrawalsResult = await base44.asServiceRole.entities.WithdrawalRequest.list('-created_date');
-    const allWithdrawals = Array.isArray(allWithdrawalsResult) ? allWithdrawalsResult : [];
+    let allWithdrawals = [];
+    if (Array.isArray(allWithdrawalsResult)) {
+      allWithdrawals = allWithdrawalsResult;
+    } else if (allWithdrawalsResult?.data && Array.isArray(allWithdrawalsResult.data)) {
+      allWithdrawals = allWithdrawalsResult.data;
+    }
     
     const filteredWithdrawals = allWithdrawals.filter(w => {
       const wDate = new Date(w.created_date);
@@ -334,7 +356,12 @@ Deno.serve(async (req) => {
     // 6. LOGO REQUEST ANALYTICS
     // ============================================
     const allLogoRequestsResult = await base44.asServiceRole.entities.AssetLogoRequest.list('-created_date');
-    const allLogoRequests = Array.isArray(allLogoRequestsResult) ? allLogoRequestsResult : [];
+    let allLogoRequests = [];
+    if (Array.isArray(allLogoRequestsResult)) {
+      allLogoRequests = allLogoRequestsResult;
+    } else if (allLogoRequestsResult?.data && Array.isArray(allLogoRequestsResult.data)) {
+      allLogoRequests = allLogoRequestsResult.data;
+    }
     
     const filteredLogoRequests = allLogoRequests.filter(lr => {
       const lrDate = new Date(lr.created_date);
