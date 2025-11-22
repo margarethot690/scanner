@@ -81,17 +81,12 @@ Deno.serve(async (req) => {
     // ============================================
     // 1. HISTORICAL BLOCKCHAIN ANALYTICS
     // ============================================
-    const allSnapshotsResult = await base44.asServiceRole.entities.BlockchainSnapshot.list('-snapshot_height');
+    const allSnapshotsResult = await base44.asServiceRole.entities.BlockchainSnapshot.list('-snapshot_height', 10000);
+    
+    console.log('Raw snapshots result:', JSON.stringify(allSnapshotsResult).substring(0, 500));
     
     // FIX: Handle all possible response formats
-    let allSnapshots = [];
-    if (Array.isArray(allSnapshotsResult)) {
-      allSnapshots = allSnapshotsResult;
-    } else if (allSnapshotsResult?.data && Array.isArray(allSnapshotsResult.data)) {
-      allSnapshots = allSnapshotsResult.data;
-    } else if (allSnapshotsResult) {
-      console.warn('Unexpected snapshot result format:', typeof allSnapshotsResult, allSnapshotsResult);
-    }
+    let allSnapshots = allSnapshotsResult || [];
     
     console.log(`Fetched ${allSnapshots.length} blockchain snapshots from database`);
     
@@ -191,13 +186,8 @@ Deno.serve(async (req) => {
     // ============================================
     // 3. WEBSITE METRICS
     // ============================================
-    const allPageViewsResult = await base44.asServiceRole.entities.PageView.list('-created_date');
-    let allPageViews = [];
-    if (Array.isArray(allPageViewsResult)) {
-      allPageViews = allPageViewsResult;
-    } else if (allPageViewsResult?.data && Array.isArray(allPageViewsResult.data)) {
-      allPageViews = allPageViewsResult.data;
-    }
+    const allPageViewsResult = await base44.asServiceRole.entities.PageView.list('-created_date', 10000);
+    const allPageViews = allPageViewsResult || [];
     
     const filteredPageViews = allPageViews.filter(pv => {
       const pvDate = new Date(pv.created_date);
@@ -292,13 +282,8 @@ Deno.serve(async (req) => {
     // ============================================
     // 4. PLATFORM ANALYTICS
     // ============================================
-    const allUsersResult = await base44.asServiceRole.entities.User.list();
-    let allUsers = [];
-    if (Array.isArray(allUsersResult)) {
-      allUsers = allUsersResult;
-    } else if (allUsersResult?.data && Array.isArray(allUsersResult.data)) {
-      allUsers = allUsersResult.data;
-    }
+    const allUsersResult = await base44.asServiceRole.entities.User.list('', 10000);
+    const allUsers = allUsersResult || [];
     
     const recentlyActiveUsers = allUsers.filter(u => {
       const lastActive = new Date(u.updated_date);
@@ -322,13 +307,8 @@ Deno.serve(async (req) => {
     // ============================================
     // 5. WITHDRAWAL ANALYTICS
     // ============================================
-    const allWithdrawalsResult = await base44.asServiceRole.entities.WithdrawalRequest.list('-created_date');
-    let allWithdrawals = [];
-    if (Array.isArray(allWithdrawalsResult)) {
-      allWithdrawals = allWithdrawalsResult;
-    } else if (allWithdrawalsResult?.data && Array.isArray(allWithdrawalsResult.data)) {
-      allWithdrawals = allWithdrawalsResult.data;
-    }
+    const allWithdrawalsResult = await base44.asServiceRole.entities.WithdrawalRequest.list('-created_date', 10000);
+    const allWithdrawals = allWithdrawalsResult || [];
     
     const filteredWithdrawals = allWithdrawals.filter(w => {
       const wDate = new Date(w.created_date);
@@ -357,13 +337,8 @@ Deno.serve(async (req) => {
     // ============================================
     // 6. LOGO REQUEST ANALYTICS
     // ============================================
-    const allLogoRequestsResult = await base44.asServiceRole.entities.AssetLogoRequest.list('-created_date');
-    let allLogoRequests = [];
-    if (Array.isArray(allLogoRequestsResult)) {
-      allLogoRequests = allLogoRequestsResult;
-    } else if (allLogoRequestsResult?.data && Array.isArray(allLogoRequestsResult.data)) {
-      allLogoRequests = allLogoRequestsResult.data;
-    }
+    const allLogoRequestsResult = await base44.asServiceRole.entities.AssetLogoRequest.list('-created_date', 10000);
+    const allLogoRequests = allLogoRequestsResult || [];
     
     const filteredLogoRequests = allLogoRequests.filter(lr => {
       const lrDate = new Date(lr.created_date);
