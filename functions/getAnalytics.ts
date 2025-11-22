@@ -90,8 +90,10 @@ Deno.serve(async (req) => {
     } else if (allSnapshotsResult?.data && Array.isArray(allSnapshotsResult.data)) {
       allSnapshots = allSnapshotsResult.data;
     } else if (allSnapshotsResult) {
-      console.warn('Unexpected snapshot result format:', typeof allSnapshotsResult);
+      console.warn('Unexpected snapshot result format:', typeof allSnapshotsResult, allSnapshotsResult);
     }
+    
+    console.log(`Fetched ${allSnapshots.length} blockchain snapshots from database`);
     
     const filteredSnapshots = allSnapshots.filter(s => 
       s.snapshot_timestamp >= startTimestamp && s.snapshot_timestamp <= endTimestamp
