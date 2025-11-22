@@ -83,10 +83,11 @@ Deno.serve(async (req) => {
     // ============================================
     const allSnapshotsResult = await base44.asServiceRole.entities.BlockchainSnapshot.list('-snapshot_height', 10000);
     
-    console.log('Raw snapshots result:', JSON.stringify(allSnapshotsResult).substring(0, 500));
+    console.log('Raw snapshots result type:', typeof allSnapshotsResult);
+    console.log('Is array?', Array.isArray(allSnapshotsResult));
     
-    // FIX: Handle all possible response formats
-    let allSnapshots = allSnapshotsResult || [];
+    // CRITICAL: Ensure allSnapshots is ALWAYS an array
+    const allSnapshots = Array.isArray(allSnapshotsResult) ? allSnapshotsResult : [];
     
     console.log(`Fetched ${allSnapshots.length} blockchain snapshots from database`);
     
@@ -187,7 +188,7 @@ Deno.serve(async (req) => {
     // 3. WEBSITE METRICS
     // ============================================
     const allPageViewsResult = await base44.asServiceRole.entities.PageView.list('-created_date', 10000);
-    const allPageViews = allPageViewsResult || [];
+    const allPageViews = Array.isArray(allPageViewsResult) ? allPageViewsResult : [];
     
     const filteredPageViews = allPageViews.filter(pv => {
       const pvDate = new Date(pv.created_date);
@@ -283,7 +284,7 @@ Deno.serve(async (req) => {
     // 4. PLATFORM ANALYTICS
     // ============================================
     const allUsersResult = await base44.asServiceRole.entities.User.list('', 10000);
-    const allUsers = allUsersResult || [];
+    const allUsers = Array.isArray(allUsersResult) ? allUsersResult : [];
     
     const recentlyActiveUsers = allUsers.filter(u => {
       const lastActive = new Date(u.updated_date);
@@ -308,7 +309,7 @@ Deno.serve(async (req) => {
     // 5. WITHDRAWAL ANALYTICS
     // ============================================
     const allWithdrawalsResult = await base44.asServiceRole.entities.WithdrawalRequest.list('-created_date', 10000);
-    const allWithdrawals = allWithdrawalsResult || [];
+    const allWithdrawals = Array.isArray(allWithdrawalsResult) ? allWithdrawalsResult : [];
     
     const filteredWithdrawals = allWithdrawals.filter(w => {
       const wDate = new Date(w.created_date);
@@ -338,7 +339,7 @@ Deno.serve(async (req) => {
     // 6. LOGO REQUEST ANALYTICS
     // ============================================
     const allLogoRequestsResult = await base44.asServiceRole.entities.AssetLogoRequest.list('-created_date', 10000);
-    const allLogoRequests = allLogoRequestsResult || [];
+    const allLogoRequests = Array.isArray(allLogoRequestsResult) ? allLogoRequestsResult : [];
     
     const filteredLogoRequests = allLogoRequests.filter(lr => {
       const lrDate = new Date(lr.created_date);

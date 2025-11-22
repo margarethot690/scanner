@@ -12,7 +12,8 @@ Deno.serve(async (req) => {
     }
 
     // Fetch all existing snapshots to find the lowest height
-    const allSnapshots = await base44.asServiceRole.entities.BlockchainSnapshot.list('', 10000) || [];
+    const allSnapshotsResult = await base44.asServiceRole.entities.BlockchainSnapshot.list('', 10000);
+    const allSnapshots = Array.isArray(allSnapshotsResult) ? allSnapshotsResult : [];
     
     if (allSnapshots.length === 0) {
       // No snapshots exist yet, start from current height
