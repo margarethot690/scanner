@@ -81,14 +81,8 @@ Deno.serve(async (req) => {
     // ============================================
     // 1. HISTORICAL BLOCKCHAIN ANALYTICS
     // ============================================
-    let allSnapshotsResult = await base44.asServiceRole.entities.BlockchainSnapshot.list('-snapshot_height', 10000);
-    
-    // CRITICAL FIX: SDK sometimes returns JSON string instead of parsed object
-    if (typeof allSnapshotsResult === 'string') {
-      allSnapshotsResult = JSON.parse(allSnapshotsResult);
-    }
-    
-    const allSnapshots = Array.isArray(allSnapshotsResult) ? allSnapshotsResult : [];
+    // CRITICAL: Limit to 500 snapshots to avoid 4MB response size limit
+    const allSnapshots = await base44.asServiceRole.entities.BlockchainSnapshot.list('-snapshot_height', 500);
     console.log(`Fetched ${allSnapshots.length} blockchain snapshots from database`);
     
     const filteredSnapshots = allSnapshots.filter(s => 
