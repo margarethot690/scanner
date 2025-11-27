@@ -17,7 +17,9 @@ import UserDashboard from './pages/UserDashboard';
 import AdminPanel from './pages/AdminPanel';
 import DexPairs from './pages/DexPairs';
 import AdminAnalytics from './pages/AdminAnalytics';
-import Layout from './Layout.jsx';
+import NodeRegistration from './pages/NodeRegistration';
+import AdminNodeRegistrations from './pages/AdminNodeRegistrations';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
@@ -40,10 +42,12 @@ export const PAGES = {
     "AdminPanel": AdminPanel,
     "DexPairs": DexPairs,
     "AdminAnalytics": AdminAnalytics,
+    "NodeRegistration": NodeRegistration,
+    "AdminNodeRegistrations": AdminNodeRegistrations,
 }
 
 export const pagesConfig = {
     mainPage: "Dashboard",
     Pages: PAGES,
-    Layout: Layout,
+    Layout: __Layout,
 };
