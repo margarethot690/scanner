@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -233,13 +232,19 @@ function LayoutContent({ children }) {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <Link to={createPageUrl("AdminAnalytics")} className="cursor-pointer">
-                            <BarChart3 className="w-4 h-4 mr-2" />
-                            Analytics Dashboard
-                          </Link>
-                        </DropdownMenuItem>
-                      </>
-                    )}
+                              <Link to={createPageUrl("AdminAnalytics")} className="cursor-pointer">
+                                <BarChart3 className="w-4 h-4 mr-2" />
+                                Analytics Dashboard
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link to={createPageUrl("AdminNodeRegistrations")} className="cursor-pointer">
+                                <Server className="w-4 h-4 mr-2" />
+                                Node Registrations
+                              </Link>
+                            </DropdownMenuItem>
+                          </>
+                        )}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
                       <LogOut className="w-4 h-4 mr-2" />
