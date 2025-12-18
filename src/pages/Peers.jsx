@@ -62,6 +62,16 @@ export default function Peers() {
       if (!peers?.peers?.length) return;
 
       const newEnrichedData = {};
+      const CACHE_KEY = 'peer_enrichment_cache';
+      
+      // Load cache from localStorage
+      let cache = {};
+      try {
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) cache = JSON.parse(cached);
+      } catch (error) {
+        console.error('Failed to load cache:', error);
+      }
       
       for (const peer of peers.peers) {
         const address = peer.address || peer.declaredAddress;
@@ -72,6 +82,20 @@ export default function Peers() {
           const ip = address.split('/')[1]?.split(':')[0];
           if (!ip) continue;
 
+          // Check cache first
+          if (cache[ip]) {
+            const registration = nodeRegistrations.find(reg => 
+              reg.status === 'approved' && peer.nodeName && 
+              peer.nodeName.toLowerCase().includes(reg.node_name.toLowerCase())
+            );
+            
+            newEnrichedData[address] = {
+              ...cache[ip],
+              registeredName: registration?.node_name || peer.nodeName || null,
+            };
+            continue;
+          }
+
           // Add delay to respect API rate limits
           await new Promise(resolve => setTimeout(resolve, 1000));
 
@@ -79,7 +103,7 @@ export default function Peers() {
           const geoResponse = await fetch(`https://ipapi.co/${ip}/json/`);
           const geoData = await geoResponse.json();
           
-          // Find matching node registration by wallet address
+          // Find matching node registration
           const registration = nodeRegistrations.find(reg => 
             reg.status === 'approved' && peer.nodeName && 
             peer.nodeName.toLowerCase().includes(reg.node_name.toLowerCase())
@@ -89,7 +113,7 @@ export default function Peers() {
           let isGreenHost = false;
           let hostedBy = null;
           try {
-            const hostname = ip; // Use IP as hostname for green check
+            const hostname = ip;
             const greenResponse = await fetch(`https://api.thegreenwebfoundation.org/api/v3/greencheck/${hostname}`);
             const greenData = await greenResponse.json();
             isGreenHost = greenData.green || false;
@@ -98,7 +122,7 @@ export default function Peers() {
             console.error(`Failed to check green hosting for ${ip}:`, error);
           }
 
-          newEnrichedData[address] = {
+          const enrichedData = {
             country: geoData.country_name || 'Unknown',
             countryCode: geoData.country_code || '',
             city: geoData.city || '',
@@ -106,9 +130,27 @@ export default function Peers() {
             isGreen: isGreenHost,
             hostedBy: hostedBy
           };
+
+          newEnrichedData[address] = enrichedData;
+          
+          // Cache the result (without registeredName as it may change)
+          cache[ip] = {
+            country: enrichedData.country,
+            countryCode: enrichedData.countryCode,
+            city: enrichedData.city,
+            isGreen: enrichedData.isGreen,
+            hostedBy: enrichedData.hostedBy,
+          };
         } catch (error) {
           console.error(`Failed to enrich peer ${address}:`, error);
         }
+      }
+
+      // Save updated cache
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+      } catch (error) {
+        console.error('Failed to save cache:', error);
       }
 
       setEnrichedPeers(prev => ({ ...prev, ...newEnrichedData }));
