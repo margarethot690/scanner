@@ -24,7 +24,8 @@ import {
   Shield,
   ChevronDown,
   Languages,
-  ArrowUpDown, // Added ArrowUpDown icon
+  ArrowUpDown,
+  Leaf,
 } from "lucide-react";
 import SearchBar from "./components/shared/SearchBar";
 import { Button } from "@/components/ui/button";
@@ -76,6 +77,7 @@ function LayoutContent({ children }) {
     { title: t("networkStats"), url: createPageUrl("NetworkStatistics"), icon: BarChart3 },
     { title: t("networkMap"), url: createPageUrl("NetworkMap"), icon: Globe },
     { title: t("peers"), url: createPageUrl("Peers"), icon: Network },
+    { title: "Sustainability", url: createPageUrl("Sustainability"), icon: Leaf },
     { title: t("node"), url: createPageUrl("Node"), icon: Server },
   ];
 
