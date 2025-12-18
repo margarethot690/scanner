@@ -72,6 +72,9 @@ export default function Peers() {
           const ip = address.split('/')[1]?.split(':')[0];
           if (!ip) continue;
 
+          // Add delay to respect API rate limits
+          await new Promise(resolve => setTimeout(resolve, 1000));
+
           // Get geolocation data
           const geoResponse = await fetch(`https://ipapi.co/${ip}/json/`);
           const geoData = await geoResponse.json();
