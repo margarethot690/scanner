@@ -40,6 +40,7 @@ import {
   FileText, // Added FileText icon for reports
   ExternalLink, // Added ExternalLink icon
   RefreshCw, // Added RefreshCw icon for refresh button
+  Receipt, // Added Receipt icon for transaction fees
 } from "lucide-react";
 import {
   Dialog,
