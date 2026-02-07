@@ -43,7 +43,6 @@ import {
   RefreshCw, // Added RefreshCw icon for refresh button
   Receipt, // Added Receipt icon for transaction fees
   Calculator,
-  PieChart,
   Blocks,
   RotateCcw,
   Info,
