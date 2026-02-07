@@ -702,44 +702,46 @@ export default function UserDashboard() {
 
       {/* Tabs */}
       <Tabs defaultValue={defaultTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 lg:grid-cols-8">
+        <div className="overflow-x-auto pb-2 -mx-4 px-4">
+          <TabsList className="inline-flex w-auto min-w-full lg:grid lg:w-full lg:grid-cols-8">
           {user?.node_owner && (
             <>
-              <TabsTrigger value="node-owner">
+              <TabsTrigger value="node-owner" className="whitespace-nowrap">
                 <Server className="w-4 h-4 mr-2" />
                 {t("nodeOwnerDashboard")}
               </TabsTrigger>
-              <TabsTrigger value="node-apps">
+              <TabsTrigger value="node-apps" className="whitespace-nowrap">
                 <DollarSign className="w-4 h-4 mr-2" />
                 {t("nodeOwnerApps")}
               </TabsTrigger>
-              <TabsTrigger value="dcc-reports">
+              <TabsTrigger value="dcc-reports" className="whitespace-nowrap">
                 <FileText className="w-4 h-4 mr-2" />
                 {t("dccReports")}
               </TabsTrigger>
-              <TabsTrigger value="tutorials">
+              <TabsTrigger value="tutorials" className="whitespace-nowrap">
                 <Activity className="w-4 h-4 mr-2" />
                 Tutorials
               </TabsTrigger>
-              <TabsTrigger value="node-earnings">
+              <TabsTrigger value="node-earnings" className="whitespace-nowrap">
                 <TrendingUp className="w-4 h-4 mr-2" />
                 Node Earnings
               </TabsTrigger>
-              <TabsTrigger value="node-config"> {/* Moved inside node_owner check */}
+              <TabsTrigger value="node-config" className="whitespace-nowrap"> {/* Moved inside node_owner check */}
                 <Settings className="w-4 h-4 mr-2" />
                 {t("nodeConfiguration")}
               </TabsTrigger>
             </>
           )}
-          <TabsTrigger value="asset-logo">
+          <TabsTrigger value="asset-logo" className="whitespace-nowrap">
             <ImageIcon className="w-4 h-4 mr-2" />
             {t("assetLogoManagement")}
           </TabsTrigger>
-          <TabsTrigger value="my-assets">
+          <TabsTrigger value="my-assets" className="whitespace-nowrap">
             <Coins className="w-4 h-4 mr-2" />
             {t("myAssets")}
           </TabsTrigger>
         </TabsList>
+        </div>
 
         {/* Node Owner Dashboard Tab */}
         {user?.node_owner && (
