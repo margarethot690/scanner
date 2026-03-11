@@ -5,7 +5,7 @@ const PAGE_LIMIT = 1000;
 const REQUEST_TIMEOUT = 20000;
 const MAX_RETRIES = 3;
 
-class BlockchainAPI {
+export class BlockchainAPI {
   constructor(customBaseUrl = null) {
     this.baseURL = customBaseUrl || DEFAULT_BASE_URL;
   }

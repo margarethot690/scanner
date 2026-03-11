@@ -26,22 +26,15 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useLanguage } from "../components/contexts/LanguageContext";
+import { useBlockHeight, useLatestBlock } from "../hooks/useBlockPolling";
 
 export default function Dashboard() {
-  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [autoRefresh, setAutoRefresh] = useState(true);
   const { t } = useLanguage();
 
-  const { data: height, isLoading: heightLoading } = useQuery({
-    queryKey: ["height"],
-    queryFn: () => blockchainAPI.getHeight(),
-    refetchInterval: autoRefresh ? 15000 : false,
-  });
+  const { data: height, isLoading: heightLoading } = useBlockHeight(autoRefresh);
 
-  const { data: lastBlock, isLoading: blockLoading } = useQuery({
-    queryKey: ["lastBlock"],
-    queryFn: () => blockchainAPI.getLastBlock(),
-    refetchInterval: autoRefresh ? 15000 : false,
-  });
+  const { data: lastBlock, isLoading: blockLoading } = useLatestBlock(autoRefresh);
 
   const { data: nodeVersion } = useQuery({
     queryKey: ["nodeVersion"],

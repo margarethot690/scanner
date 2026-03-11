@@ -13,6 +13,7 @@ import CopyButton from "../components/shared/CopyButton";
 import { Activity, Play, Pause, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "../components/contexts/LanguageContext"; // Added import
+import { useBlockHeight, useLatestBlock } from "../hooks/useBlockPolling";
 
 const MAX_BLOCKS_PER_REQUEST = 100; // API limit for block headers request
 const INITIAL_BLOCKS_TO_FETCH = 20;
@@ -25,17 +26,9 @@ export default function BlockFeed() {
   const [expandedBlocks, setExpandedBlocks] = useState(new Set());
   const lastHeightRef = useRef(0);
 
-  const { data: currentHeight } = useQuery({
-    queryKey: ["height"],
-    queryFn: () => blockchainAPI.getHeight(),
-    refetchInterval: paused ? false : 5000,
-  });
+  const { data: currentHeight } = useBlockHeight(!paused);
 
-  const { data: lastBlock } = useQuery({
-    queryKey: ["lastBlock"],
-    queryFn: () => blockchainAPI.getLastBlock(),
-    refetchInterval: paused ? false : 5000,
-  });
+  const { data: lastBlock } = useLatestBlock(!paused);
 
   // Initial load - fetch last 20 blocks
   const { data: initialBlocks, isLoading } = useQuery({

@@ -11,23 +11,10 @@ export default function ReportCard({ title, dateRange, language, startDate, endD
   const { data: reportData, isLoading, error, refetch } = useQuery({
     queryKey: ["dccReport", startDate, endDate, language],
     queryFn: async () => {
-      const response = await fetch(
-        `https://decentral-chain-nexus-2f269bf8.base44.app/api/apps/68f7ed390329cb922f269bf8/functions/generateMonthlyReport?startDate=${startDate}&endDate=${endDate}&language=${language}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.success) {
-        return data;
-      } else {
-        throw new Error(data.error || 'Failed to generate report');
-      }
+      // Report generation endpoint is not available in standalone mode
+      throw new Error('Monthly report generation is not available without a backend service');
     },
-    staleTime: 1000 * 60 * 60 * 24, // Consider data fresh for 24 hours
+    staleTime: 1000 * 60 * 60 * 24,
     cacheTime: 1000 * 60 * 60 * 24 * 7, // Keep in cache for 7 days
     retry: 1,
   });

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/lib/AuthContext";
+import { PageView } from "@/api/entities";
 
 // Generate or retrieve visitor ID from localStorage
 const getVisitorId = () => {
@@ -50,18 +50,7 @@ export default function AnalyticsTracker() {
   const location = useLocation();
   const pageStartTime = useRef(Date.now());
   const currentPageViewId = useRef(null);
-
-  // Get current user (may be null if not authenticated)
-  const { data: user } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: async () => {
-      try {
-        return await base44.auth.me();
-      } catch {
-        return null;
-      }
-    },
-  });
+  const { user } = useAuth();
 
   useEffect(() => {
     const trackPageView = async () => {
@@ -70,7 +59,7 @@ export default function AnalyticsTracker() {
       
       try {
         // Create page view record
-        const pageView = await base44.entities.PageView.create({
+        const pageView = await PageView.create({
           page_path: location.pathname,
           page_title: document.title,
           visitor_id: visitorId,
@@ -97,7 +86,7 @@ export default function AnalyticsTracker() {
     return () => {
       if (currentPageViewId.current) {
         const timeOnPage = Math.floor((Date.now() - pageStartTime.current) / 1000);
-        base44.entities.PageView.update(currentPageViewId.current, {
+        PageView.update(currentPageViewId.current, {
           time_on_page: timeOnPage,
         }).catch(() => {
           // Silently fail if update doesn't work

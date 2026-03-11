@@ -29,11 +29,12 @@ export default function CopyButton({ text, label }) {
             size="icon"
             className="h-7 w-7"
             onClick={handleCopy}
+            aria-label={copied ? "Copied" : label || "Copy"}
           >
             {copied ? (
-              <Check className="h-3.5 w-3.5 text-green-600" />
+              <Check className="h-3.5 w-3.5 text-green-600" aria-hidden="true" />
             ) : (
-              <Copy className="h-3.5 w-3.5" />
+              <Copy className="h-3.5 w-3.5" aria-hidden="true" />
             )}
           </Button>
         </TooltipTrigger>

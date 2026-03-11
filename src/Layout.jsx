@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import {
   LayoutDashboard,
@@ -26,6 +26,8 @@ import {
   Languages,
   ArrowUpDown,
   Leaf,
+  Sun,
+  Moon,
 } from "lucide-react";
 import SearchBar from "./components/shared/SearchBar";
 import { Button } from "@/components/ui/button";
@@ -40,6 +42,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LanguageProvider, useLanguage } from "./components/contexts/LanguageContext";
+import { useTheme } from "next-themes";
 
 // New component for analytics tracking
 const AnalyticsTracker = () => {
@@ -62,6 +65,7 @@ function LayoutContent({ children }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { language, changeLanguage, t } = useLanguage();
+  const { theme, setTheme } = useTheme();
 
   const navigationItems = [
     { title: t("dashboard"), url: createPageUrl("Dashboard"), icon: LayoutDashboard },
@@ -81,17 +85,7 @@ function LayoutContent({ children }) {
     { title: t("node"), url: createPageUrl("Node"), icon: Server },
   ];
 
-  // Fetch current user
-  const { data: user, isLoading: userLoading } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: async () => {
-      try {
-        return await base44.auth.me();
-      } catch (error) {
-        return null;
-      }
-    },
-  });
+  const { user, isLoadingAuth: userLoading, logout: authLogout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -101,8 +95,9 @@ function LayoutContent({ children }) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleLogout = async () => {
-    await base44.auth.logout();
+  const handleLogout = () => {
+    authLogout();
+    window.location.href = '/';
   };
 
   const getInitials = (name) => {
@@ -117,6 +112,7 @@ function LayoutContent({ children }) {
 
   return (
     <div className="min-h-screen bg-[#FAFAF9]">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:p-4 focus:bg-white focus:text-black">Skip to main content</a>
       {/* Analytics Tracker - invisible component that tracks page views */}
       <AnalyticsTracker />
 
@@ -158,6 +154,17 @@ function LayoutContent({ children }) {
 
             {/* User Menu / Sign In Button, Language Switcher & Mobile Menu Button */}
             <div className="flex items-center gap-2">
+              {/* Dark Mode Toggle */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              >
+                <Sun className="w-5 h-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+                <Moon className="absolute w-5 h-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+                <span className="sr-only">Toggle theme</span>
+              </Button>
+
               {/* Language Switcher */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -256,7 +263,7 @@ function LayoutContent({ children }) {
                 </DropdownMenu>
               ) : (
                 <Button
-                  onClick={() => base44.auth.redirectToLogin(window.location.pathname)}
+                  onClick={() => window.location.href = '/login'}
                   className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-md"
                 >
                   <User className="w-4 h-4 mr-2" />
@@ -269,6 +276,8 @@ function LayoutContent({ children }) {
                 size="icon"
                 className="lg:hidden"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label="Toggle navigation menu"
+                aria-expanded={mobileMenuOpen}
               >
                 {mobileMenuOpen ? (
                   <X className="w-5 h-5" />
@@ -288,7 +297,7 @@ function LayoutContent({ children }) {
         {/* Navigation Tabs Row - Desktop */}
         <div className="hidden lg:block border-t bg-white/50">
           <div className="container mx-auto px-4">
-            <nav className="flex items-center gap-1 overflow-x-auto py-2">
+            <nav aria-label="Main navigation" className="flex items-center gap-1 overflow-x-auto py-2">
               {navigationItems.map((item) => (
                 <Link
                   key={item.title}
@@ -310,7 +319,7 @@ function LayoutContent({ children }) {
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="lg:hidden border-t bg-white">
-            <nav className="container mx-auto px-4 py-4 grid grid-cols-2 gap-2">
+            <nav aria-label="Mobile navigation" className="container mx-auto px-4 py-4 grid grid-cols-2 gap-2">
               {navigationItems.map((item) => (
                 <Link
                   key={item.title}
@@ -332,7 +341,7 @@ function LayoutContent({ children }) {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
+      <main id="main-content" className="container mx-auto px-4 py-8">
         {children}
       </main>
 

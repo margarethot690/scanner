@@ -71,11 +71,12 @@ export default function SearchBar() {
   };
 
   return (
-    <form onSubmit={handleSearch} className="relative flex-1 max-w-2xl">
-      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+    <form onSubmit={handleSearch} role="search" aria-label="Search the blockchain" className="relative flex-1 max-w-2xl">
+      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" aria-hidden="true" />
       <Input
         type="text"
         placeholder="Search by block height, block ID, transaction ID, address, or asset ID..."
+        aria-label="Search by block height, transaction ID, address, or asset ID"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         className="pl-10 pr-24"
@@ -88,7 +89,7 @@ export default function SearchBar() {
         className="absolute right-1.5 top-1/2 transform -translate-y-1/2"
       >
         {loading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <><Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /><span className="sr-only">Searching...</span></>
         ) : (
           "Search"
         )}

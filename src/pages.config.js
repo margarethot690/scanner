@@ -47,30 +47,32 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import Address from './pages/Address';
-import AdminAnalytics from './pages/AdminAnalytics';
-import AdminNodeRegistrations from './pages/AdminNodeRegistrations';
-import AdminPanel from './pages/AdminPanel';
-import Asset from './pages/Asset';
-import BlockDetail from './pages/BlockDetail';
-import BlockFeed from './pages/BlockFeed';
-import Blocks from './pages/Blocks';
-import Dashboard from './pages/Dashboard';
-import DexPairs from './pages/DexPairs';
-import DistributionTool from './pages/DistributionTool';
-import Home from './pages/Home';
-import NetworkMap from './pages/NetworkMap';
-import NetworkStatistics from './pages/NetworkStatistics';
-import Node from './pages/Node';
-import NodeRegistration from './pages/NodeRegistration';
-import Peers from './pages/Peers';
-import Sustainability from './pages/Sustainability';
-import Transaction from './pages/Transaction';
-import TransactionMap from './pages/TransactionMap';
-import UnconfirmedTransactions from './pages/UnconfirmedTransactions';
-import UserDashboard from './pages/UserDashboard';
-import UserProfile from './pages/UserProfile';
+import { lazy } from 'react';
 import __Layout from './Layout.jsx';
+
+const Address = lazy(() => import('./pages/Address'));
+const AdminAnalytics = lazy(() => import('./pages/AdminAnalytics'));
+const AdminNodeRegistrations = lazy(() => import('./pages/AdminNodeRegistrations'));
+const AdminPanel = lazy(() => import('./pages/AdminPanel'));
+const Asset = lazy(() => import('./pages/Asset'));
+const BlockDetail = lazy(() => import('./pages/BlockDetail'));
+const BlockFeed = lazy(() => import('./pages/BlockFeed'));
+const Blocks = lazy(() => import('./pages/Blocks'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const DexPairs = lazy(() => import('./pages/DexPairs'));
+const DistributionTool = lazy(() => import('./pages/DistributionTool'));
+const Home = lazy(() => import('./pages/Home'));
+const NetworkMap = lazy(() => import('./pages/NetworkMap'));
+const NetworkStatistics = lazy(() => import('./pages/NetworkStatistics'));
+const Node = lazy(() => import('./pages/Node'));
+const NodeRegistration = lazy(() => import('./pages/NodeRegistration'));
+const Peers = lazy(() => import('./pages/Peers'));
+const Sustainability = lazy(() => import('./pages/Sustainability'));
+const Transaction = lazy(() => import('./pages/Transaction'));
+const TransactionMap = lazy(() => import('./pages/TransactionMap'));
+const UnconfirmedTransactions = lazy(() => import('./pages/UnconfirmedTransactions'));
+const UserDashboard = lazy(() => import('./pages/UserDashboard'));
+const UserProfile = lazy(() => import('./pages/UserProfile'));
 
 
 export const PAGES = {

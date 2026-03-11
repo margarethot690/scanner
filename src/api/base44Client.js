@@ -1,13 +1,9 @@
-import { createClient } from '@base44/sdk';
-import { appParams } from '@/lib/app-params';
+/**
+ * App API client — standalone (no Base44 dependency).
+ * Re-exports auth, entities, and integrations for backward compatibility.
+ */
+import { auth } from './auth';
+import * as entities from './entities';
+import * as integrations from './integrations';
 
-const { appId, serverUrl, token, functionsVersion } = appParams;
-
-//Create a client with authentication required
-export const base44 = createClient({
-  appId,
-  serverUrl,
-  token,
-  functionsVersion,
-  requiresAuth: false
-});
+export { auth, entities, integrations };

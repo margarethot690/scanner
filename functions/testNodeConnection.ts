@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { validateNodeUrl } from './_shared/validation.ts';
 
 Deno.serve(async (req) => {
     try {
@@ -18,8 +19,8 @@ Deno.serve(async (req) => {
             }, { status: 400 });
         }
 
-        // Clean up the URL - remove trailing slash if present
-        const cleanUrl = nodeUrl.trim().replace(/\/$/, '');
+        // Validate and sanitize the URL to prevent SSRF
+        const cleanUrl = validateNodeUrl(nodeUrl, '');
         const testEndpoint = `${cleanUrl}/node/status`;
 
         console.log(`Testing connection to: ${testEndpoint}`);

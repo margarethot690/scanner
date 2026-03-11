@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { blockchainAPI } from "../components/utils/blockchain";
-import { base44 } from "@/api/base44Client";
+import { NodeRegistration } from "@/api/entities";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -47,7 +47,7 @@ export default function Peers() {
   useEffect(() => {
     const fetchRegistrations = async () => {
       try {
-        const registrations = await base44.entities.NodeRegistration.list();
+        const registrations = await NodeRegistration.list();
         setNodeRegistrations(registrations);
       } catch (error) {
         console.error("Failed to fetch node registrations:", error);

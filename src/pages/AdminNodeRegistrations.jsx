@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { NodeRegistration } from "@/api/entities";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -19,11 +19,11 @@ export default function AdminNodeRegistrations() {
 
   const { data: registrations, isLoading } = useQuery({
     queryKey: ["nodeRegistrations"],
-    queryFn: () => base44.entities.NodeRegistration.list("-created_date"),
+    queryFn: () => NodeRegistration.list("-created_date"),
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, status }) => base44.entities.NodeRegistration.update(id, { status }),
+    mutationFn: ({ id, status }) => NodeRegistration.update(id, { status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["nodeRegistrations"] }),
   });
 

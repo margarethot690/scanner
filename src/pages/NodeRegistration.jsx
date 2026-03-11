@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { NodeRegistration as NodeRegistrationEntity } from "@/api/entities";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,7 @@ export default function NodeRegistration() {
 
     setSubmitting(true);
     try {
-      await base44.entities.NodeRegistration.create({
+      await NodeRegistrationEntity.create({
         node_name: formData.node_name.trim(),
         wallet_address: formData.wallet_address.trim(),
         status: "pending"

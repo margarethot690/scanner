@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
+import { AssetLogoRequest, BlockchainConfig, WithdrawalRequest } from "@/api/entities";
+import { UploadFile } from "@/api/integrations";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -57,7 +59,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { blockchainAPI } from "../components/utils/blockchain";
+import { blockchainAPI, createCustomBlockchainAPI } from "../components/utils/blockchain";
 import AssetLogo from "../components/shared/AssetLogo";
 import { Textarea } from "@/components/ui/textarea";
 import ReportCard from "../components/dashboard/ReportCard";
@@ -110,33 +112,6 @@ const timeAgo = (timestamp) => {
   return Math.floor(seconds) + " seconds ago";
 };
 
-// Factory function to create a blockchain API instance with a custom base URL
-// NOTE: This factory function is no longer directly used for node owner dashboard features
-// because we are now invoking backend functions to bypass CORS.
-// It remains here for other potential uses or for for reference.
-const createCustomBlockchainAPI = (baseURL) => {
-  const cleanBaseURL = baseURL.trim().replace(/\/$/, ''); // Remove trailing slash
-
-  const makeRequest = async (path) => {
-    const response = await fetch(`${cleanBaseURL}${path}`, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' }
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch ${path}: ${response.statusText}`);
-    }
-    return response.json();
-  };
-
-  return {
-    getHeight: () => makeRequest('/blocks/height'),
-    getLastBlock: () => makeRequest('/blocks/last'),
-    getNodeVersion: () => makeRequest('/node/version'),
-    getBlockHeaders: async (from, to) => makeRequest(`/blocks/headers/${from}/${to}`),
-    // Add other blockchain API methods as needed
-  };
-};
-
 // IMPORTANT: Replace this with the actual Base44 App ID for DCC Reports
 // This ID is used to construct the URL for generating reports.
 const DCC_REPORTS_APP_ID = "68e848614749b5c2de7b91ab"; // Example: "your_dcc_reports_app_id" - PLEASE UPDATE
@@ -167,10 +142,7 @@ export default function UserDashboard() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [logoUploadStatus, setLogoUploadStatus] = useState(null);
 
-  const { data: user, isLoading } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: () => base44.auth.me(),
-  });
+  const { user, isLoadingAuth: isLoading, updateMe } = useAuth();
 
   // Create custom blockchain API instance with user's node URL
   // This is no longer directly used for node owner dashboard features
@@ -185,7 +157,7 @@ export default function UserDashboard() {
   // Fetch user's logo requests
   const { data: myLogoRequests, isLoading: logoRequestsLoading } = useQuery({
     queryKey: ["myLogoRequests", user?.email],
-    queryFn: () => base44.entities.AssetLogoRequest.filter({
+    queryFn: () => AssetLogoRequest.filter({
       requested_by: user.email
     }),
     enabled: !!user?.email,
@@ -200,21 +172,9 @@ export default function UserDashboard() {
   } = useQuery({
     queryKey: ["casinoProfits", user?.email, CASINO_APP_ID], // <--- Include CASINO_APP_ID in the key
     queryFn: async () => {
-      try {
-        const response = await fetch(
-          `https://crc-casino-copy-96018eeb.base44.app/api/apps/${CASINO_APP_ID}/functions/getNodeOwnerProfits`
-        );
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Failed to fetch casino profits: ${response.status} - ${errorText}`);
-        }
-        const data = await response.json();
-        console.log("Casino profits data:", data);
-        return data;
-      } catch (error) {
-        console.error("Error fetching casino profits:", error);
-        throw error;
-      }
+      // Casino profits endpoint is no longer available without the base44 backend
+      console.warn("Casino profits endpoint not available in standalone mode");
+      return { data: { crc: {}, btc: {} } };
     },
     enabled: !!user?.node_owner,
     retry: 1,
@@ -224,12 +184,9 @@ export default function UserDashboard() {
   const { data: height } = useQuery({
     queryKey: ["height", user?.node_api_url],
     queryFn: async () => {
-      if (!user?.node_api_url) return null; // Guard against missing URL
-      const response = await base44.functions.invoke('getNodeHeight', {
-        nodeUrl: user.node_api_url
-      });
-      // Assuming response.data contains the height object { height: number }
-      return response.data;
+      if (!user?.node_api_url) return null;
+      const api = createCustomBlockchainAPI(user.node_api_url);
+      return api.getHeight();
     },
     enabled: !!user?.node_owner && !!user?.node_api_url,
   });
@@ -237,12 +194,9 @@ export default function UserDashboard() {
   const { data: lastBlock } = useQuery({
     queryKey: ["lastBlock", user?.node_api_url],
     queryFn: async () => {
-      if (!user?.node_api_url) return null; // Guard against missing URL
-      const response = await base44.functions.invoke('getLastBlock', {
-        nodeUrl: user.node_api_url
-      });
-      // Assuming response.data contains the last block object
-      return response.data;
+      if (!user?.node_api_url) return null;
+      const api = createCustomBlockchainAPI(user.node_api_url);
+      return api.getLastBlock();
     },
     enabled: !!user?.node_owner && !!user?.node_api_url,
   });
@@ -250,12 +204,9 @@ export default function UserDashboard() {
   const { data: nodeVersion } = useQuery({
     queryKey: ["nodeVersion", user?.node_api_url],
     queryFn: async () => {
-      if (!user?.node_api_url) return null; // Guard against missing URL
-      const response = await base44.functions.invoke('getNodeVersion', {
-        nodeUrl: user.node_api_url
-      });
-      // Assuming response.data contains the node version object { version: string }
-      return response.data;
+      if (!user?.node_api_url) return null;
+      const api = createCustomBlockchainAPI(user.node_api_url);
+      return api.getNodeVersion();
     },
     enabled: !!user?.node_owner && !!user?.node_api_url,
   });
@@ -265,15 +216,10 @@ export default function UserDashboard() {
   const { data: recentBlocks } = useQuery({
     queryKey: ["recentBlocks", currentHeight, user?.node_api_url],
     queryFn: async () => {
-      if (!user?.node_api_url || currentHeight === 0) return null; // Guard against missing URL or zero height
+      if (!user?.node_api_url || currentHeight === 0) return null;
       const from = Math.max(1, currentHeight - 99);
-      const response = await base44.functions.invoke('getBlockHeaders', {
-        nodeUrl: user.node_api_url,
-        from,
-        to: currentHeight
-      });
-      // Assuming response.data contains an array of block headers
-      return response.data;
+      const api = createCustomBlockchainAPI(user.node_api_url);
+      return api.getBlockHeaders(from, currentHeight);
     },
     enabled: currentHeight > 0 && !!user?.node_owner && !!user?.node_api_url,
     staleTime: 10000, // consider fresh for 10 seconds
@@ -375,7 +321,7 @@ export default function UserDashboard() {
   }, [recentBlocks]);
 
   const updateNodeConfigMutation = useMutation({
-    mutationFn: (data) => base44.auth.updateMe(data),
+    mutationFn: (data) => updateMe(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       setConnectionStatus({ type: "success", message: t("configSaved") });
@@ -405,33 +351,21 @@ export default function UserDashboard() {
     setConnectionStatus(null);
 
     try {
-      // Call backend function to test the connection
-      const response = await base44.functions.invoke('testNodeConnection', {
-        nodeUrl: nodeUrl.trim()
+      // Test the connection directly using the blockchain API
+      const api = createCustomBlockchainAPI(nodeUrl.trim());
+      const statusData = await api.getNodeStatus();
+      
+      const updatedDate = statusData.updatedDate ? new Date(statusData.updatedDate).toLocaleString() : t('na');
+      
+      setConnectionStatus({
+        type: "success",
+        message: t("connectionSuccessful")
+          .replace("{endpoint}", nodeUrl.trim())
+          .replace("{blockchainHeight}", (statusData.blockchainHeight || 0).toLocaleString())
+          .replace("{stateHeight}", (statusData.stateHeight || 0).toLocaleString())
+          .replace("{updatedDate}", updatedDate),
+        data: statusData
       });
-
-      if (response.data.success) {
-        const data = response.data.data;
-        const updatedDate = data.updatedDate ? new Date(data.updatedDate).toLocaleString() : t('na');
-        
-        setConnectionStatus({
-          type: "success",
-          message: t("connectionSuccessful")
-            .replace("{endpoint}", response.data.endpoint)
-            .replace("{blockchainHeight}", data.blockchainHeight.toLocaleString())
-            .replace("{stateHeight}", data.stateHeight.toLocaleString())
-            .replace("{updatedDate}", updatedDate),
-          data: data
-        });
-      } else {
-        setConnectionStatus({
-          type: "error",
-          message: t("connectionFailed")
-            .replace("{error}", response.data.error)
-            .replace("{endpoint}", response.data.endpoint)
-            .replace("{details}", response.data.details ? `\n\n${response.data.details}` : ''),
-        });
-      }
     } catch (error) {
       setConnectionStatus({
         type: "error",
@@ -481,7 +415,7 @@ export default function UserDashboard() {
       }
       
       // Check if logo already exists (approved)
-      const existingLogos = await base44.entities.AssetLogoRequest.filter({
+      const existingLogos = await AssetLogoRequest.filter({
         asset_id: assetIdForLogo,
         status: "approved"
       });
@@ -496,10 +430,10 @@ export default function UserDashboard() {
       }
 
       // Upload the logo file
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: logoFile });
+      const { file_url } = await UploadFile({ file: logoFile });
 
       // Create logo request
-      await base44.entities.AssetLogoRequest.create({
+      await AssetLogoRequest.create({
         asset_id: assetIdForLogo,
         asset_name: asset.name || t("unknownAsset"), // Use translated placeholder if asset name is missing
         logo_url: file_url,
@@ -546,10 +480,9 @@ export default function UserDashboard() {
     setLoadingNodeStatus(true);
     setNodeStatusData(null); // Clear previous status
     try {
-      const response = await base44.functions.invoke('getNodeStatus', {
-        nodeUrl: user.node_api_url
-      });
-      setNodeStatusData(response.data);
+      const api = createCustomBlockchainAPI(user.node_api_url);
+      const data = await api.getNodeStatus();
+      setNodeStatusData(data);
       setShowNodeStatus(true);
     } catch (error) {
       setNodeStatusData({ error: error.message || t("failedToFetchNodeStatus") });
@@ -562,17 +495,16 @@ export default function UserDashboard() {
   const fetchPeers = async () => {
     if (!user?.node_api_url) {
       setPeersData({ error: t("noNodeUrlConfigured") });
-      setShowPeers(true); // Show the card with the error message
+      setShowPeers(true);
       return;
     }
 
     setLoadingPeers(true);
-    setPeersData(null); // Clear previous peers
+    setPeersData(null);
     try {
-      const response = await base44.functions.invoke('getPeers', {
-        nodeUrl: user.node_api_url
-      });
-      setPeersData(response.data);
+      const api = createCustomBlockchainAPI(user.node_api_url);
+      const data = await api.getConnectedPeers();
+      setPeersData(data);
       setShowPeers(true);
     } catch (error) {
       setPeersData({ error: error.message || t("failedToFetchPeers") });
@@ -2075,13 +2007,13 @@ function CasinoProfitsDisplay({ data, user, queryClient, t }) {
   // Fetch blockchain config for total nodes
   const { data: blockchainConfigs } = useQuery({
     queryKey: ["blockchainConfig"],
-    queryFn: () => base44.entities.BlockchainConfig.list(),
+    queryFn: () => BlockchainConfig.list(),
   });
 
   // Fetch user's withdrawal requests from database
   const { data: withdrawalRequests, isLoading: withdrawalsLoading } = useQuery({
     queryKey: ["userWithdrawals", user?.email],
-    queryFn: () => base44.entities.WithdrawalRequest.filter({
+    queryFn: () => WithdrawalRequest.filter({
       user_email: user.email
     }, "-created_date", 50),
     enabled: !!user?.email,
@@ -2162,7 +2094,7 @@ function CasinoProfitsDisplay({ data, user, queryClient, t }) {
     setWithdrawalStatus(null);
 
     try {
-      await base44.entities.WithdrawalRequest.create({
+      await WithdrawalRequest.create({
         user_email: user.email,
         user_name: user.full_name,
         crc_wallet_address: crcWalletAddress,

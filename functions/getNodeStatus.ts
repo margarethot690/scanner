@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.7.1';
+import { validateNodeUrl } from './_shared/validation.ts';
 
 Deno.serve(async (req) => {
     try {
@@ -10,7 +11,7 @@ Deno.serve(async (req) => {
         }
 
         const { nodeUrl } = await req.json();
-        const cleanUrl = (nodeUrl || user.node_api_url || 'https://mainnet-node.decentralchain.io').trim().replace(/\/$/, '');
+        const cleanUrl = validateNodeUrl(nodeUrl || user.node_api_url, 'https://mainnet-node.decentralchain.io');
         
         const response = await fetch(`${cleanUrl}/node/status`, {
             method: 'GET',

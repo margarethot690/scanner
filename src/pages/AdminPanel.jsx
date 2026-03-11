@@ -1,6 +1,8 @@
 
 import React, { useEffect, useState } from "react";
-import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
+import { auth } from "@/api/auth";
+import { AssetLogoRequest, WithdrawalRequest, BlockchainConfig } from "@/api/entities";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -84,34 +86,31 @@ export default function AdminPanel() {
   const [processingWithdrawal, setProcessingWithdrawal] = useState(null);
   const [withdrawalRejectionReason, setWithdrawalRejectionReason] = useState("");
 
-  const { data: currentUser, isLoading: userLoading } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: () => base44.auth.me(),
-  });
+  const { user: currentUser, isLoadingAuth: userLoading } = useAuth();
 
   const { data: allUsers, isLoading: usersLoading } = useQuery({
     queryKey: ["allUsers"],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: () => auth.listUsers(),
     enabled: currentUser?.role === "admin",
   });
 
   const { data: pendingLogoRequests, isLoading: logosLoading } = useQuery({
     queryKey: ["pendingLogoRequests"],
-    queryFn: () => base44.entities.AssetLogoRequest.filter({ status: "pending" }, "-created_date", 100),
+    queryFn: () => AssetLogoRequest.filter({ status: "pending" }, "-created_date", 100),
     enabled: currentUser?.role === "admin",
   });
 
   // Fetch pending withdrawal requests
   const { data: pendingWithdrawals, isLoading: withdrawalsLoading } = useQuery({
     queryKey: ["pendingWithdrawals"],
-    queryFn: () => base44.entities.WithdrawalRequest.filter({ status: "pending" }, "-created_date", 100),
+    queryFn: () => WithdrawalRequest.filter({ status: "pending" }, "-created_date", 100),
     enabled: currentUser?.role === "admin",
   });
 
   // Fetch blockchain config
   const { data: blockchainConfigs, isLoading: configLoading } = useQuery({
     queryKey: ["blockchainConfig"],
-    queryFn: () => base44.entities.BlockchainConfig.list(),
+    queryFn: () => BlockchainConfig.list(),
     enabled: currentUser?.role === "admin",
   });
 
@@ -125,7 +124,7 @@ export default function AdminPanel() {
   }, [blockchainConfigs]);
 
   const updateUserMutation = useMutation({
-    mutationFn: ({ userId, data }) => base44.entities.User.update(userId, data),
+    mutationFn: ({ userId, data }) => auth.updateUser(userId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["allUsers"] });
       setEditingUser(null);
@@ -135,9 +134,9 @@ export default function AdminPanel() {
   const updateBlockchainConfigMutation = useMutation({
     mutationFn: async ({ configId, data }) => {
       if (configId) {
-        return base44.entities.BlockchainConfig.update(configId, data);
+        return BlockchainConfig.update(configId, data);
       } else {
-        return base44.entities.BlockchainConfig.create({ ...data, config_name: "main" });
+        return BlockchainConfig.create({ ...data, config_name: "main" });
       }
     },
     onSuccess: () => {
@@ -147,7 +146,7 @@ export default function AdminPanel() {
 
   const approveLogoMutation = useMutation({
     mutationFn: ({ requestId }) =>
-      base44.entities.AssetLogoRequest.update(requestId, { status: "approved" }),
+      AssetLogoRequest.update(requestId, { status: "approved" }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["pendingLogoRequests"] });
     },
@@ -155,7 +154,7 @@ export default function AdminPanel() {
 
   const rejectLogoMutation = useMutation({
     mutationFn: ({ requestId, reason }) =>
-      base44.entities.AssetLogoRequest.update(requestId, {
+      AssetLogoRequest.update(requestId, {
         status: "rejected",
         rejection_reason: reason
       }),
@@ -166,7 +165,7 @@ export default function AdminPanel() {
 
   const approveWithdrawalMutation = useMutation({
     mutationFn: async ({ requestId, adminEmail }) =>
-      base44.entities.WithdrawalRequest.update(requestId, {
+      WithdrawalRequest.update(requestId, {
         status: "approved",
         processed_by: adminEmail,
         processed_date: new Date().toISOString()
@@ -178,7 +177,7 @@ export default function AdminPanel() {
 
   const rejectWithdrawalMutation = useMutation({
     mutationFn: async ({ requestId, reason, adminEmail }) =>
-      base44.entities.WithdrawalRequest.update(requestId, {
+      WithdrawalRequest.update(requestId, {
         status: "rejected",
         rejection_reason: reason,
         processed_by: adminEmail,

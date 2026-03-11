@@ -1,6 +1,8 @@
 
 import React, { useState, useMemo } from "react";
-import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
+import { auth } from "@/api/auth";
+import { AssetLogoRequest, WithdrawalRequest, BlockchainConfig, BlockchainSnapshot, PageView } from "@/api/entities";
 import { blockchainAPI } from "../components/utils/blockchain";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -89,43 +91,40 @@ export default function AdminAnalytics() {
   const [aiError, setAiError] = useState(null);
 
   // Check admin access
-  const { data: currentUser, isLoading: userLoading } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: () => base44.auth.me(),
-  });
+  const { user: currentUser, isLoadingAuth: userLoading } = useAuth();
 
   // Fetch all users
   const { data: allUsers, isLoading: usersLoading } = useQuery({
     queryKey: ["allUsers"],
-    queryFn: () => base44.entities.User.list(),
+    queryFn: () => auth.listUsers(),
     enabled: currentUser?.role === "admin",
   });
 
   // Fetch logo requests
   const { data: logoRequests, isLoading: logosLoading } = useQuery({
     queryKey: ["allLogoRequests"],
-    queryFn: () => base44.entities.AssetLogoRequest.list(),
+    queryFn: () => AssetLogoRequest.list(),
     enabled: currentUser?.role === "admin",
   });
 
   // Fetch withdrawal requests
   const { data: withdrawalRequests, isLoading: withdrawalsLoading } = useQuery({
     queryKey: ["allWithdrawals"],
-    queryFn: () => base44.entities.WithdrawalRequest.list(),
+    queryFn: () => WithdrawalRequest.list(),
     enabled: currentUser?.role === "admin",
   });
 
   // Fetch blockchain config
   const { data: blockchainConfigs } = useQuery({
     queryKey: ["blockchainConfig"],
-    queryFn: () => base44.entities.BlockchainConfig.list(),
+    queryFn: () => BlockchainConfig.list(),
     enabled: currentUser?.role === "admin",
   });
 
   // Fetch blockchain snapshots
   const { data: blockchainSnapshots, isLoading: snapshotsLoading, refetch: refetchSnapshots } = useQuery({
     queryKey: ["blockchainSnapshots"],
-    queryFn: () => base44.entities.BlockchainSnapshot.list("-snapshot_height"), // <--- Removed the 100 limit
+    queryFn: () => BlockchainSnapshot.list("-snapshot_height"),
     enabled: currentUser?.role === "admin",
   });
 
@@ -175,7 +174,7 @@ export default function AdminAnalytics() {
   // Fetch page views for website metrics
   const { data: pageViews, isLoading: pageViewsLoading } = useQuery({
     queryKey: ["pageViews"],
-    queryFn: () => base44.entities.PageView.list("-created_date", 1000),
+    queryFn: () => PageView.list("-created_date", 1000),
     enabled: currentUser?.role === "admin",
   });
 
@@ -738,29 +737,7 @@ export default function AdminAnalytics() {
 
 Be specific with numbers, use professional business language, and provide actionable insights. Keep each section concise but impactful.`;
 
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            overall_health: { type: "string" },
-            key_strengths: { type: "array", items: { type: "string" } },
-            areas_of_concern: { type: "array", items: { type: "string" } },
-            growth_trends: { type: "string" },
-            cr_coin_performance: { type: "string" },
-            user_engagement: { type: "string" },
-            recommendations: { type: "array", items: { type: "string" } },
-            outlook: { type: "string" },
-          },
-          required: ["overall_health", "key_strengths", "areas_of_concern", "growth_trends", "cr_coin_performance", "user_engagement", "recommendations", "outlook"],
-        },
-      });
-
-      console.log('AI Response received:', response);
-
-      // The response is the actual data, not wrapped in a data property
-      setAiSummary(response);
-      console.log('AI Summary set successfully');
+      setAiError("AI summary generation is not available without a backend LLM service. Consider connecting an OpenAI or similar API.");
     } catch (error) {
       console.error("Failed to generate AI summary:", error);
       setAiError(error.message);
@@ -813,13 +790,15 @@ Be specific with numbers, use professional business language, and provide action
   const handleGenerateSnapshot = async () => {
     setGeneratingSnapshot(true);
     try {
-      const response = await base44.functions.invoke('generateBlockchainSnapshot', {});
-      if (response.data.success) {
-        alert(`Snapshot created successfully for height ${response.data.snapshot.height}!`);
-        refetchSnapshots();
-      } else {
-        alert(`Snapshot already exists: ${response.data.message}`);
-      }
+      const heightData = await blockchainAPI.getHeight();
+      const h = heightData.height;
+      const snapshot = {
+        snapshot_height: h,
+        snapshot_date: new Date().toISOString(),
+      };
+      await BlockchainSnapshot.create(snapshot);
+      alert(`Snapshot created successfully for height ${h}!`);
+      refetchSnapshots();
     } catch (error) {
       alert(`Error generating snapshot: ${error.message}`);
     } finally {

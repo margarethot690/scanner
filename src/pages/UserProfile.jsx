@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAuth } from "@/lib/AuthContext";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -18,14 +18,10 @@ export default function UserProfile() {
   const [formData, setFormData] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const queryClient = useQueryClient();
-
-  const { data: user, isLoading } = useQuery({
-    queryKey: ["currentUser"],
-    queryFn: () => base44.auth.me(),
-  });
+  const { user, updateMe, isLoadingAuth: isLoading } = useAuth();
 
   const updateMutation = useMutation({
-    mutationFn: (data) => base44.auth.updateMe(data),
+    mutationFn: (data) => updateMe(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["currentUser"] });
       setIsEditing(false);

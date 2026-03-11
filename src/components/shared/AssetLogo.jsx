@@ -1,6 +1,6 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
+import { AssetLogoRequest } from "@/api/entities";
 import { Coins } from "lucide-react";
 
 const CR_COIN_ASSET_ID = "G9TVbwiiUZd5WxFxoY7Tb6ZPjGGLfynJK4a3aoC59cMo";
@@ -33,7 +33,7 @@ export default function AssetLogo({ assetId, size = "md", className = "" }) {
   const { data: logoRequests } = useQuery({
     queryKey: ["assetLogo", assetId],
     queryFn: async () => {
-      const requests = await base44.entities.AssetLogoRequest.filter({
+      const requests = await AssetLogoRequest.filter({
         asset_id: assetId,
         status: "approved"
       });
