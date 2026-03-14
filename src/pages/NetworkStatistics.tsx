@@ -16,6 +16,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { PeersConnectedResponse } from '@/lib/api';
 import {
   fetchBlockHeadersSeq,
   fetchConnectedPeers,
@@ -26,7 +27,6 @@ import {
   type INodeStatus,
   type INodeVersion,
 } from '@/lib/api';
-import type { PeersResponse } from '@/types';
 import { useLanguage } from '../components/contexts/LanguageContext';
 
 export default function NetworkStatistics() {
@@ -47,7 +47,7 @@ export default function NetworkStatistics() {
     queryFn: () => fetchNodeVersion(),
   });
 
-  const { data: connectedPeers } = useQuery<PeersResponse>({
+  const { data: connectedPeers } = useQuery<PeersConnectedResponse>({
     queryKey: ['peers', 'connected'],
     queryFn: () => fetchConnectedPeers(),
   });

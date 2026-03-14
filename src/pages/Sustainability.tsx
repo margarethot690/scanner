@@ -6,8 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { fetchConnectedPeers } from '@/lib/api';
-import type { Peer, PeersResponse } from '@/types';
+import { fetchConnectedPeers, type PeersConnectedResponse } from '@/lib/api';
+import type { Peer } from '@/types';
 
 type SustainabilityStats = {
   totalNodes: number;
@@ -22,7 +22,7 @@ export default function Sustainability() {
   const [greenStats, setGreenStats] = useState<SustainabilityStats | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const { data: connected } = useQuery<PeersResponse>({
+  const { data: connected } = useQuery<PeersConnectedResponse>({
     queryKey: ['peers', 'connected'],
     queryFn: () => fetchConnectedPeers(),
   });

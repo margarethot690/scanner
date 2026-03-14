@@ -59,10 +59,6 @@ export interface Peer {
   [key: string]: unknown;
 }
 
-export interface PeersResponse {
-  peers: Peer[];
-}
-
 // ─── Entity Storage ──────────────────────────────────────────────
 
 export interface EntityRecord {

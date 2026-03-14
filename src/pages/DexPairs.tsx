@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/table';
 import {
   type DexPairData,
-  fetchAssetDetailsById,
+  fetchBatchAssetDetails,
   fetchMatcherOrderbook,
   fetchPairInfo,
   type OrderbookResponse,
@@ -60,62 +60,59 @@ export default function DexPairs() {
 
       setLoading(true);
       try {
-        const pairs: DexPairRow[] = [];
-
-        // Try to fetch all available pairs
+        // Phase 1: Fetch pair info for all markets (data-service — sequential with delay)
+        const marketPairInfo: Array<{
+          market: (typeof orderbook.markets)[0];
+          data: NonNullable<NonNullable<Awaited<ReturnType<typeof fetchPairInfo>>>['data']>;
+        }> = [];
         for (const market of orderbook.markets) {
           try {
             await new Promise((resolve) => setTimeout(resolve, 100));
-
             const pairInfo = await fetchPairInfo(market.amountAsset, market.priceAsset);
-
             if (pairInfo?.data) {
-              let amountAssetName = 'Unknown';
-              let priceAssetName = 'Unknown';
-
-              try {
-                if (market.amountAsset !== 'DCC' && market.amountAsset !== 'WAVES') {
-                  const amountDetails = await fetchAssetDetailsById(market.amountAsset);
-                  amountAssetName = amountDetails.name || 'Unknown';
-                } else {
-                  amountAssetName = 'DCC';
-                }
-
-                if (market.priceAsset !== 'DCC' && market.priceAsset !== 'WAVES') {
-                  const priceDetails = await fetchAssetDetailsById(market.priceAsset);
-                  priceAssetName = priceDetails.name || 'Unknown';
-                } else {
-                  priceAssetName = 'DCC';
-                }
-              } catch (_err) {
-                continue;
-              }
-
-              const change24h =
-                pairInfo.data.firstPrice > 0
-                  ? ((pairInfo.data.lastPrice - pairInfo.data.firstPrice) /
-                      pairInfo.data.firstPrice) *
-                    100
-                  : 0;
-
-              pairs.push({
-                amountAsset: market.amountAsset,
-                priceAsset: market.priceAsset,
-                amountAssetName,
-                priceAssetName,
-                pairName: `${amountAssetName}/${priceAssetName}`,
-                lastPrice: pairInfo.data.lastPrice,
-                firstPrice: pairInfo.data.firstPrice,
-                volume: pairInfo.data.volume,
-                quoteVolume: pairInfo.data.quoteVolume || 0,
-                change24h,
-                high: pairInfo.data.high || 0,
-                low: pairInfo.data.low || 0,
-                txsCount: pairInfo.data.txsCount,
-                weightedAveragePrice: pairInfo.data.weightedAveragePrice || 0,
-              });
+              marketPairInfo.push({ market, data: pairInfo.data });
             }
           } catch (_error) {}
+        }
+
+        // Phase 2: Batch-fetch all unique asset details in one HTTP request
+        const DCC_IDS = new Set(['DCC', 'WAVES']);
+        const assetIds = new Set<string>();
+        for (const { market } of marketPairInfo) {
+          if (!DCC_IDS.has(market.amountAsset)) assetIds.add(market.amountAsset);
+          if (!DCC_IDS.has(market.priceAsset)) assetIds.add(market.priceAsset);
+        }
+        const assetMap = await fetchBatchAssetDetails([...assetIds]);
+
+        // Phase 3: Assemble pairs with resolved names
+        const pairs: DexPairRow[] = [];
+        for (const { market, data } of marketPairInfo) {
+          const amountAssetName = DCC_IDS.has(market.amountAsset)
+            ? 'DCC'
+            : assetMap.get(market.amountAsset)?.name || 'Unknown';
+          const priceAssetName = DCC_IDS.has(market.priceAsset)
+            ? 'DCC'
+            : assetMap.get(market.priceAsset)?.name || 'Unknown';
+
+          const change24h =
+            data.firstPrice > 0 ? ((data.lastPrice - data.firstPrice) / data.firstPrice) * 100 : 0;
+
+          pairs.push({
+            amountAsset: market.amountAsset,
+            priceAsset: market.priceAsset,
+            amountAssetName,
+            priceAssetName,
+            pairName: `${amountAssetName}/${priceAssetName}`,
+            lastPrice: data.lastPrice,
+            firstPrice: data.firstPrice,
+            volume: data.volume,
+            quoteVolume: data.quoteVolume || 0,
+            change24h,
+            high: data.high || 0,
+            low: data.low || 0,
+            txsCount: data.txsCount,
+            weightedAveragePrice: data.weightedAveragePrice || 0,
+          });
         }
 
         setPairsData(pairs);

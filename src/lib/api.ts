@@ -11,13 +11,16 @@ import type {
   TAssetBalance,
   TAssetDetails,
   TAssetsBalance,
+  TErrorResponse,
 } from '@decentralchain/node-api-js/api-node/assets';
 import type { IBlock, IBlockHeader } from '@decentralchain/node-api-js/api-node/blocks';
 import type {
   INodeStatus as INodeStatusBase,
   INodeVersion,
 } from '@decentralchain/node-api-js/api-node/node';
-import type { Lease, PeersResponse, Transaction } from '@/types';
+import type { IBlackPeer, ISuspendedPeer } from '@decentralchain/node-api-js/api-node/peers';
+import type { TRewards } from '@decentralchain/node-api-js/api-node/rewards';
+import type { Lease, Peer, Transaction } from '@/types';
 
 /** Augmented node status – the real API returns extra fields the SDK omits. */
 export interface INodeStatus extends INodeStatusBase {
@@ -25,15 +28,41 @@ export interface INodeStatus extends INodeStatusBase {
   historyReplierEnabled?: boolean;
 }
 
+/** Balance details — SDK's TLong fields arrive as string | number at runtime. */
+export interface IBalanceDetails {
+  address: string;
+  regular: string | number;
+  generating: string | number;
+  available: string | number;
+  effective: string | number;
+}
+
+/** Blockchain rewards — SDK's TLong fields arrive as string | number at runtime. */
+export interface IRewards {
+  height: number;
+  totalDccAmount: string | number;
+  currentReward: string | number;
+  minIncrement: string | number;
+  term: number;
+  nextCheck: number;
+  votingIntervalStart: number;
+  votingInterval: number;
+  votingThreshold: number;
+  votes: { increase: number; decrease: number };
+}
+
 // Re-export SDK types for consumers
 export type {
   IAssetDistribution,
+  IBlackPeer,
   IBlock,
   IBlockHeader,
   INodeVersion,
+  ISuspendedPeer,
   TAssetBalance,
   TAssetDetails,
   TAssetsBalance,
+  TRewards,
 };
 
 // ── Constants ──────────────────────────────────────────────────────────
@@ -51,11 +80,30 @@ export async function fetchAssetDetailsById(assetId: string): Promise<TAssetDeta
   return results[0] as TAssetDetails;
 }
 
+/** Batch-fetch details for multiple assets in a single HTTP request. */
+export async function fetchBatchAssetDetails(
+  assetIds: string[],
+): Promise<Map<string, TAssetDetails>> {
+  if (assetIds.length === 0) return new Map();
+
+  const results = (await nodeApi.assets.fetchAssetsDetails(assetIds)) as (
+    | TAssetDetails
+    | TErrorResponse
+  )[];
+  const map = new Map<string, TAssetDetails>();
+  for (const r of results) {
+    if (!('error' in r)) {
+      map.set(r.assetId, r);
+    }
+  }
+  return map;
+}
+
 // ── Typed wrappers (absorb SDK ↔ scanner type mismatch) ───────────────
 
 // Blocks
 export async function fetchHeight(): Promise<{ height: number }> {
-  return nodeApi.blocks.fetchHeight() as Promise<{ height: number }>;
+  return nodeApi.blocks.fetchHeight();
 }
 
 export async function fetchLastBlock(): Promise<IBlock> {
@@ -70,8 +118,8 @@ export async function fetchBlockById(id: string): Promise<IBlock> {
   return nodeApi.blocks.fetchBlockById(id) as Promise<IBlock>;
 }
 
-export async function fetchBlockHeadersSeq(from: number, to: number): Promise<IBlock[]> {
-  return nodeApi.blocks.fetchHeadersSeq(from, to) as Promise<IBlock[]>;
+export async function fetchBlockHeadersSeq(from: number, to: number): Promise<IBlockHeader[]> {
+  return nodeApi.blocks.fetchHeadersSeq(from, to) as Promise<IBlockHeader[]>;
 }
 
 // Transactions
@@ -86,9 +134,9 @@ export async function fetchUnconfirmedTransactionInfo(id: string): Promise<Trans
 export async function fetchAddressTransactions(
   address: string,
   limit: number,
-): Promise<Transaction[][]> {
+): Promise<Transaction[]> {
   return nodeApi.transactions.fetchTransactions(address, limit) as unknown as Promise<
-    Transaction[][]
+    Transaction[]
   >;
 }
 
@@ -111,20 +159,20 @@ export async function fetchActiveLeases(address: string): Promise<Lease[]> {
 }
 
 // Peers
-export async function fetchConnectedPeers(): Promise<PeersResponse> {
-  return nodeApi.peers.fetchConnected() as unknown as Promise<PeersResponse>;
+export async function fetchConnectedPeers(): Promise<PeersConnectedResponse> {
+  return nodeApi.peers.fetchConnected() as unknown as Promise<PeersConnectedResponse>;
 }
 
-export async function fetchAllPeers(): Promise<PeersResponse> {
-  return nodeApi.peers.fetchAll() as unknown as Promise<PeersResponse>;
+export async function fetchAllPeers(): Promise<PeersAllResponse> {
+  return nodeApi.peers.fetchAll() as unknown as Promise<PeersAllResponse>;
 }
 
-export async function fetchSuspendedPeers(): Promise<PeersResponse> {
-  return nodeApi.peers.fetchSuspended() as unknown as Promise<PeersResponse>;
+export async function fetchSuspendedPeers(): Promise<ISuspendedPeer[]> {
+  return nodeApi.peers.fetchSuspended() as unknown as Promise<ISuspendedPeer[]>;
 }
 
-export async function fetchBlacklistedPeers(): Promise<PeersResponse> {
-  return nodeApi.peers.fetchBlackListed() as unknown as Promise<PeersResponse>;
+export async function fetchBlacklistedPeers(): Promise<IBlackPeer[]> {
+  return nodeApi.peers.fetchBlackListed() as unknown as Promise<IBlackPeer[]>;
 }
 
 // Node
@@ -133,12 +181,32 @@ export async function fetchNodeStatus(): Promise<INodeStatus> {
 }
 
 export async function fetchNodeVersion(): Promise<INodeVersion> {
-  return nodeApi.node.fetchNodeVersion() as unknown as Promise<INodeVersion>;
+  return nodeApi.node.fetchNodeVersion();
+}
+
+// Rewards
+export async function fetchRewards(height?: number): Promise<IRewards> {
+  return nodeApi.rewards.fetchRewards(height) as unknown as Promise<IRewards>;
+}
+
+// Addresses
+export async function fetchBalanceDetails(address: string): Promise<IBalanceDetails> {
+  return nodeApi.addresses.fetchBalanceDetails(address) as unknown as Promise<IBalanceDetails>;
 }
 
 /** Extract typed transactions from a block response. */
 export function getBlockTransactions(block: IBlock): Transaction[] {
   return block.transactions as unknown as Transaction[];
+}
+
+// ── Peer response types (matching SDK structure) ───────────────────────
+
+export interface PeersConnectedResponse {
+  peers: Peer[];
+}
+
+export interface PeersAllResponse {
+  peers: Peer[];
 }
 
 // ── Scanner-specific types (not in SDK) ────────────────────────────────

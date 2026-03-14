@@ -61,7 +61,7 @@ export default function Address() {
     enabled: !!address,
   });
 
-  const { data: transactions, isLoading: txLoading } = useQuery<Transaction[][]>({
+  const { data: transactions, isLoading: txLoading } = useQuery<Transaction[]>({
     queryKey: ['transactions', address],
     queryFn: () => fetchAddressTransactions(address, 50),
     enabled: !!address,
@@ -87,7 +87,7 @@ export default function Address() {
   });
 
   const addressTransactions = useMemo<Transaction[]>(() => {
-    return transactions?.[0] ?? [];
+    return transactions ?? [];
   }, [transactions]);
 
   const addressBalances = balances?.balances ?? [];

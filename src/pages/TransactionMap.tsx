@@ -104,12 +104,7 @@ export default function TransactionMap() {
     txArrays: unknown,
     { assetId, treatAsNative }: { assetId: string; treatAsNative: boolean },
   ): ParsedTransfer[] => {
-    const maybeArray = Array.isArray(txArrays) ? txArrays : [];
-    const flatRaw =
-      maybeArray.length > 0 && Array.isArray(maybeArray[0])
-        ? (maybeArray as Array<Array<Record<string, unknown>>>).flat()
-        : (maybeArray as Array<Record<string, unknown>>);
-    const flat = flatRaw as Array<Record<string, unknown>>;
+    const flat = (Array.isArray(txArrays) ? txArrays : []) as Array<Record<string, unknown>>;
     const out: ParsedTransfer[] = [];
 
     for (const t_item of flat) {

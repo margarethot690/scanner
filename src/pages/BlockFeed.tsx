@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { fetchBlockAt, fetchBlockHeadersSeq, type IBlock } from '@/lib/api';
+import { fetchBlockAt, fetchBlockHeadersSeq, type IBlock, type IBlockHeader } from '@/lib/api';
 import { createPageUrl } from '@/utils';
 import { useLanguage } from '../components/contexts/LanguageContext'; // Added import
 import CopyButton from '../components/shared/CopyButton';
@@ -21,7 +21,7 @@ const MAX_GAP_TO_FETCH = 50; // Don't try to fetch more than 50 blocks at once w
 export default function BlockFeed() {
   const { t } = useLanguage(); // Added useLanguage hook
   const [paused, setPaused] = useState<boolean>(false);
-  const [blocks, setBlocks] = useState<IBlock[]>([]);
+  const [blocks, setBlocks] = useState<IBlockHeader[]>([]);
   const [expandedBlocks, setExpandedBlocks] = useState<Set<number>>(new Set<number>());
   const lastHeightRef = useRef<number>(0);
 
@@ -30,7 +30,7 @@ export default function BlockFeed() {
   const { data: lastBlock } = useLatestBlock(!paused);
 
   // Initial load - fetch last 20 blocks
-  const { data: initialBlocks, isLoading } = useQuery<IBlock[] | null>({
+  const { data: initialBlocks, isLoading } = useQuery<IBlockHeader[] | null>({
     queryKey: ['initialBlocks', currentHeight?.height],
     queryFn: async () => {
       if (!currentHeight?.height) return null;

@@ -19,12 +19,23 @@ import {
   fetchBlacklistedPeers,
   fetchConnectedPeers,
   fetchSuspendedPeers,
+  type IBlackPeer,
+  type ISuspendedPeer,
+  type PeersAllResponse,
+  type PeersConnectedResponse,
 } from '@/lib/api';
-import type { NodeRegistrationRecord, Peer, PeersResponse } from '@/types';
+import type { NodeRegistrationRecord, Peer } from '@/types';
 import { useLanguage } from '../components/contexts/LanguageContext';
 import { fromUnix } from '../components/utils/formatters';
 
-type PeerApiShape = Peer[] | PeersResponse | null | undefined;
+type PeerApiShape =
+  | Peer[]
+  | PeersConnectedResponse
+  | PeersAllResponse
+  | ISuspendedPeer[]
+  | IBlackPeer[]
+  | null
+  | undefined;
 
 type EnrichedPeerData = {
   country: string;
@@ -37,7 +48,18 @@ type EnrichedPeerData = {
 
 const extractPeers = (data: PeerApiShape): Peer[] => {
   if (!data) return [];
-  return Array.isArray(data) ? data : data.peers || [];
+  if (Array.isArray(data)) {
+    // ISuspendedPeer[] / IBlackPeer[] have {hostname, timestamp} — normalize to Peer shape
+    if (data.length > 0 && data[0] && 'hostname' in data[0] && !('address' in data[0])) {
+      return (data as ISuspendedPeer[]).map((p) => ({
+        address: (p as ISuspendedPeer & { hostname: string }).hostname,
+        lastSeen: p.timestamp,
+        ...('reason' in p ? { peerName: (p as IBlackPeer).reason } : {}),
+      })) as Peer[];
+    }
+    return data as Peer[];
+  }
+  return ((data as PeersConnectedResponse | PeersAllResponse).peers as Peer[]) || [];
 };
 
 export default function Peers() {
@@ -45,22 +67,22 @@ export default function Peers() {
   const [enrichedPeers, setEnrichedPeers] = useState<Record<string, EnrichedPeerData>>({});
   const [nodeRegistrations, setNodeRegistrations] = useState<NodeRegistrationRecord[]>([]);
 
-  const { data: connected, isLoading: connectedLoading } = useQuery<PeersResponse>({
+  const { data: connected, isLoading: connectedLoading } = useQuery<PeersConnectedResponse>({
     queryKey: ['peers', 'connected'],
     queryFn: () => fetchConnectedPeers(),
   });
 
-  const { data: all, isLoading: allLoading } = useQuery<PeersResponse>({
+  const { data: all, isLoading: allLoading } = useQuery<PeersAllResponse>({
     queryKey: ['peers', 'all'],
     queryFn: () => fetchAllPeers(),
   });
 
-  const { data: suspended, isLoading: suspendedLoading } = useQuery<PeerApiShape>({
+  const { data: suspended, isLoading: suspendedLoading } = useQuery<ISuspendedPeer[]>({
     queryKey: ['peers', 'suspended'],
     queryFn: () => fetchSuspendedPeers(),
   });
 
-  const { data: blacklisted, isLoading: blacklistedLoading } = useQuery<PeerApiShape>({
+  const { data: blacklisted, isLoading: blacklistedLoading } = useQuery<IBlackPeer[]>({
     queryKey: ['peers', 'blacklisted'],
     queryFn: () => fetchBlacklistedPeers(),
   });
