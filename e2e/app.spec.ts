@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test.describe('App smoke tests', () => {
   test('homepage loads without crashing', async ({ page }) => {
@@ -14,9 +14,7 @@ test.describe('App smoke tests', () => {
     await page.goto('/');
     await page.waitForTimeout(2000);
     // Filter out known non-critical errors (e.g. missing env vars)
-    const critical = errors.filter(
-      (e) => !e.includes('BASE44') && !e.includes('Proxy not enabled')
-    );
+    const critical = errors.filter((e) => !e.includes('Proxy not enabled'));
     expect(critical).toHaveLength(0);
   });
 
@@ -36,9 +34,7 @@ test.describe('Static assets', () => {
 
   test('JS bundle executes', async ({ page }) => {
     await page.goto('/');
-    const hasReactRoot = await page.evaluate(
-      () => !!document.getElementById('root')
-    );
+    const hasReactRoot = await page.evaluate(() => !!document.getElementById('root'));
     expect(hasReactRoot).toBe(true);
   });
 });
