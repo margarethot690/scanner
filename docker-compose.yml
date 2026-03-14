@@ -2,9 +2,6 @@ services:
   frontend:
     build:
       context: .
-      args:
-        VITE_BASE44_APP_ID: ${VITE_BASE44_APP_ID}
-        VITE_BASE44_BACKEND_URL: ${VITE_BASE44_BACKEND_URL}
     ports:
       - "3000:80"
     restart: unless-stopped
