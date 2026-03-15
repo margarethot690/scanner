@@ -1,5 +1,5 @@
 # DecentralScan - Blockchain Explorer
-# https://github.com/dylanpersonguy/dccscan_new_frontend
+# https://github.com/dylanpersonguy/explorer
 
 User-agent: *
 Allow: /

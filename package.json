@@ -1,20 +1,20 @@
 {
-  "name": "dccscan",
+  "name": "scanner",
   "version": "1.0.0",
   "description": "A modern, full-featured blockchain explorer for the DecentralChain (DCC) network. Explore blocks, transactions, addresses, assets, and network health in real time.",
-  "author": "DecentralScan Contributors",
+  "author": "DecentralChain",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dylanpersonguy/dccscan_new_frontend.git"
+    "url": "git+https://github.com/Decentral-America/scanner.git"
   },
   "bugs": {
-    "url": "https://github.com/dylanpersonguy/dccscan_new_frontend/issues"
+    "url": "https://github.com/Decentral-America/scanner/issues"
   },
-  "homepage": "https://github.com/dylanpersonguy/dccscan_new_frontend#readme",
+  "homepage": "https://github.com/Decentral-America/scanner#readme",
   "packageManager": "npm@10.9.2",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "keywords": [
     "blockchain",
@@ -69,6 +69,7 @@
     "clsx": "^2.1.1",
     "cytoscape": "3.33.1",
     "cytoscape-fcose": "2.2.0",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.577.0",
     "next-themes": "^0.4.6",
     "react": "^19.2.4",

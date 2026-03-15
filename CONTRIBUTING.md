@@ -20,8 +20,8 @@ This project adheres to a [Code of Conduct](CODE_OF_CONDUCT.md). By participatin
 1. **Fork** the repository on GitHub
 2. **Clone** your fork locally:
    ```bash
-   git clone https://github.com/<your-username>/dccscan_new_frontend.git
-   cd dccscan_new_frontend
+   git clone https://github.com/<your-username>/explorer.git
+   cd explorer
    ```
 3. **Install dependencies:**
    ```bash
@@ -141,6 +141,6 @@ src/
 
 ## Questions?
 
-If you have questions about contributing, feel free to [open an issue](https://github.com/dylanpersonguy/dccscan_new_frontend/issues/new) with the "question" label.
+If you have questions about contributing, feel free to [open an issue](https://github.com/dylanpersonguy/explorer/issues/new) with the "question" label.
 
 Thank you for helping make DecentralScan better! 🎉

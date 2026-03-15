@@ -46,4 +46,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `@base44/vite-plugin` dependency
 - All Base44 platform dependencies
 
-[1.0.0]: https://github.com/dylanpersonguy/dccscan_new_frontend/releases/tag/v1.0.0
+[1.0.0]: https://github.com/dylanpersonguy/explorer/releases/tag/v1.0.0

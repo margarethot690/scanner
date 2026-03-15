@@ -87,7 +87,7 @@ Whether you're a node operator monitoring uptime, a developer debugging transact
 ## 🏗 Architecture
 
 ```
-dccscan_new_frontend/
+explorer/
 ├── .github/
 │   └── workflows/ci.yml        # GitHub Actions CI pipeline
 ├── e2e/                         # Playwright E2E tests
@@ -149,8 +149,8 @@ dccscan_new_frontend/
 
 ```bash
 # Clone the repository
-git clone https://github.com/dylanpersonguy/dccscan_new_frontend.git
-cd dccscan_new_frontend
+git clone https://github.com/dylanpersonguy/explorer.git
+cd explorer
 
 # Install dependencies
 npm install
