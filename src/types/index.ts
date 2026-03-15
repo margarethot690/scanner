@@ -1,4 +1,14 @@
+import type { ILeaseInfo } from '@decentralchain/node-api-js/api-node/leasing';
+import type {
+  IPeerAllResponse,
+  IPeerConnectedResponse,
+} from '@decentralchain/node-api-js/api-node/peers';
+
 // ─── Transaction ─────────────────────────────────────────────────
+// Flat convenience interface for node-API transaction responses.
+// Field types use string | number (the SDK's TLong) for amounts/fees.
+// Type-specific fields are optional; the index signature allows
+// dynamic access (sorting, JSON display).
 
 export interface Transaction {
   id: string;
@@ -8,17 +18,17 @@ export interface Transaction {
   sender: string;
   senderPublicKey?: string;
   recipient?: string;
-  amount?: number;
-  fee: number;
+  amount?: string | number;
+  fee: string | number;
   feeAssetId?: string | null;
-  height?: number;
+  height: number;
   assetId?: string | null;
   attachment?: string;
   proofs?: string[];
-  transfers?: Array<{ recipient: string; amount: number }>;
+  transfers?: Array<{ recipient: string; amount: string | number }>;
   name?: string;
   description?: string;
-  quantity?: number;
+  quantity?: string | number;
   decimals?: number;
   reissuable?: boolean;
   script?: string | null;
@@ -28,36 +38,26 @@ export interface Transaction {
     function: string;
     args: Array<{ type: string; value: unknown }>;
   };
-  payment?: Array<{ amount: number; assetId: string | null }>;
+  payment?: Array<{ amount: string | number; assetId: string | null }>;
   data?: Array<{ key: string; type: string; value: unknown }>;
-  [key: string]: unknown;
+  stateChanges?: unknown;
+  applicationStatus?: 'succeeded' | 'script_execution_failed';
 }
 
 // ─── Lease ───────────────────────────────────────────────────────
+// Re-export from SDK — no hand-written duplicate needed.
 
-export interface Lease {
-  id: string;
-  sender: string;
-  recipient: string;
-  amount: number;
-  status?: string;
-  height?: number;
-  [key: string]: unknown;
-}
+export type Lease = ILeaseInfo;
 
 // ─── Peer ────────────────────────────────────────────────────────
+// Combines fields from /peers/connected and /peers/all endpoints
+// plus scanner-specific nodeName enrichment.
 
-export interface Peer {
-  address: string;
-  declaredAddress?: string;
-  nodeName?: string;
-  peerName?: string;
-  peerNonce?: number;
-  lastSeen?: number;
-  applicationName?: string;
-  applicationVersion?: string;
-  [key: string]: unknown;
-}
+export type Peer = Partial<IPeerConnectedResponse> &
+  Partial<IPeerAllResponse> & {
+    address: string;
+    nodeName?: string;
+  };
 
 // ─── Entity Storage ──────────────────────────────────────────────
 

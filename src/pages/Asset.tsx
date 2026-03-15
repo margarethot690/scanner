@@ -294,10 +294,10 @@ function AssetActivityWidget() {
                   stat.txCount++;
 
                   if (tx.type === 4) {
-                    stat.totalAmount += tx.amount || 0;
+                    stat.totalAmount += Number(tx.amount) || 0;
                   } else if (tx.type === 11 && tx.transfers) {
                     for (const transfer of tx.transfers) {
-                      stat.totalAmount += transfer.amount || 0;
+                      stat.totalAmount += Number(transfer.amount) || 0;
                     }
                   }
                 }

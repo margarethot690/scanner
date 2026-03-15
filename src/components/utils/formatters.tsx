@@ -9,7 +9,7 @@ function formatDateTime(date: Date): string {
 }
 
 export function formatAmount(
-  amount: number | bigint | null | undefined,
+  amount: number | bigint | string | null | undefined,
   decimals: number = 8,
 ): string {
   if (!amount && amount !== 0) return '0';

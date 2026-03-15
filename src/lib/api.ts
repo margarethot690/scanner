@@ -2,8 +2,8 @@
  * SDK-backed API layer for DecentralChain scanner.
  *
  * Replaces the hand-rolled BlockchainAPI class with @decentralchain/node-api-js.
- * Keeps raw fetch for: matcher orderbook, data-service pair info, and
- * asset distribution pagination (SDK lacks `after` cursor parameter).
+ * Keeps raw fetch for: matcher orderbook and data-service pair info
+ * (served by separate non-node services without SDK equivalents).
  */
 import { create } from '@decentralchain/node-api-js';
 import type {
@@ -124,24 +124,22 @@ export async function fetchBlockHeadersSeq(from: number, to: number): Promise<IB
 
 // Transactions
 export async function fetchTransactionInfo(id: string): Promise<Transaction> {
-  return nodeApi.transactions.fetchInfo(id) as unknown as Promise<Transaction>;
+  return nodeApi.transactions.fetchInfo(id) as Promise<Transaction>;
 }
 
 export async function fetchUnconfirmedTransactionInfo(id: string): Promise<Transaction> {
-  return nodeApi.transactions.fetchUnconfirmedInfo(id) as unknown as Promise<Transaction>;
+  return nodeApi.transactions.fetchUnconfirmedInfo(id) as Promise<Transaction>;
 }
 
 export async function fetchAddressTransactions(
   address: string,
   limit: number,
 ): Promise<Transaction[]> {
-  return nodeApi.transactions.fetchTransactions(address, limit) as unknown as Promise<
-    Transaction[]
-  >;
+  return nodeApi.transactions.fetchTransactions(address, limit) as Promise<Transaction[]>;
 }
 
 export async function fetchUnconfirmedTransactions(): Promise<Transaction[]> {
-  return nodeApi.transactions.fetchUnconfirmed() as unknown as Promise<Transaction[]>;
+  return nodeApi.transactions.fetchUnconfirmed() as Promise<Transaction[]>;
 }
 
 // Assets
@@ -155,29 +153,29 @@ export async function fetchAddressNFTs(address: string, limit: number): Promise<
 
 // Leasing
 export async function fetchActiveLeases(address: string): Promise<Lease[]> {
-  return nodeApi.leasing.fetchActive(address) as unknown as Promise<Lease[]>;
+  return nodeApi.leasing.fetchActive(address) as Promise<Lease[]>;
 }
 
 // Peers
 export async function fetchConnectedPeers(): Promise<PeersConnectedResponse> {
-  return nodeApi.peers.fetchConnected() as unknown as Promise<PeersConnectedResponse>;
+  return nodeApi.peers.fetchConnected() as Promise<PeersConnectedResponse>;
 }
 
 export async function fetchAllPeers(): Promise<PeersAllResponse> {
-  return nodeApi.peers.fetchAll() as unknown as Promise<PeersAllResponse>;
+  return nodeApi.peers.fetchAll() as Promise<PeersAllResponse>;
 }
 
 export async function fetchSuspendedPeers(): Promise<ISuspendedPeer[]> {
-  return nodeApi.peers.fetchSuspended() as unknown as Promise<ISuspendedPeer[]>;
+  return nodeApi.peers.fetchSuspended();
 }
 
 export async function fetchBlacklistedPeers(): Promise<IBlackPeer[]> {
-  return nodeApi.peers.fetchBlackListed() as unknown as Promise<IBlackPeer[]>;
+  return nodeApi.peers.fetchBlackListed();
 }
 
 // Node
 export async function fetchNodeStatus(): Promise<INodeStatus> {
-  return nodeApi.node.fetchNodeStatus() as unknown as Promise<INodeStatus>;
+  return nodeApi.node.fetchNodeStatus() as Promise<INodeStatus>;
 }
 
 export async function fetchNodeVersion(): Promise<INodeVersion> {
@@ -186,17 +184,17 @@ export async function fetchNodeVersion(): Promise<INodeVersion> {
 
 // Rewards
 export async function fetchRewards(height?: number): Promise<IRewards> {
-  return nodeApi.rewards.fetchRewards(height) as unknown as Promise<IRewards>;
+  return nodeApi.rewards.fetchRewards(height) as Promise<IRewards>;
 }
 
 // Addresses
 export async function fetchBalanceDetails(address: string): Promise<IBalanceDetails> {
-  return nodeApi.addresses.fetchBalanceDetails(address) as unknown as Promise<IBalanceDetails>;
+  return nodeApi.addresses.fetchBalanceDetails(address) as Promise<IBalanceDetails>;
 }
 
 /** Extract typed transactions from a block response. */
 export function getBlockTransactions(block: IBlock): Transaction[] {
-  return block.transactions as unknown as Transaction[];
+  return block.transactions as Transaction[];
 }
 
 // ── Peer response types (matching SDK structure) ───────────────────────
@@ -210,14 +208,8 @@ export interface PeersAllResponse {
 }
 
 // ── Scanner-specific types (not in SDK) ────────────────────────────────
-export interface DistributionPage {
-  hasNext: boolean;
-  lastAddress: string | null;
-  items: Record<string, string>;
-}
-
 export interface FullDistribution {
-  items: Record<string, string>;
+  items: Record<string, number>;
   totalPages: number;
   totalHolders: number;
 }
@@ -261,45 +253,24 @@ export interface DexPairData {
   txsCount: number;
 }
 
-// ── Asset distribution (SDK lacks `after` cursor) ──────────────────────
-async function fetchAssetDistribution(
-  assetId: string,
-  height: number,
-  limit: number = DISTRIBUTION_PAGE_LIMIT,
-  after: string | null = null,
-): Promise<DistributionPage> {
-  let endpoint = `${DEFAULT_NODE_URL}/assets/${assetId}/distribution/${height}/limit/${limit}`;
-  if (after) {
-    endpoint += `?after=${encodeURIComponent(after)}`;
-  }
-
-  const response = await fetch(endpoint, {
-    headers: { 'Content-Type': 'application/json' },
-  });
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-  }
-
-  const data = (await response.json()) as Record<string, unknown>;
-  const items = (data.values || data.items || {}) as Record<string, string>;
-  const hasNext = (data.hasNext as boolean) || false;
-  const lastAddress = (data.last || data.lastAddress || data.lastItem || null) as string | null;
-
-  return { hasNext, lastAddress, items };
-}
-
+// ── Asset distribution (via SDK with `after` cursor) ───────────────────
 export async function fetchFullAssetDistribution(
   assetId: string,
   height: number,
   onProgress: ((pages: number, holders: number, hasMore: boolean) => void) | null = null,
 ): Promise<FullDistribution> {
-  let allItems: Record<string, string> = {};
-  let after: string | null = null;
+  let allItems: Record<string, number> = {};
+  let after: string | undefined;
   let pageCount = 0;
   let hasMore = true;
 
   while (hasMore) {
-    const page = await fetchAssetDistribution(assetId, height, DISTRIBUTION_PAGE_LIMIT, after);
+    const page = await nodeApi.assets.fetchAssetDistribution(
+      assetId,
+      height,
+      DISTRIBUTION_PAGE_LIMIT,
+      after,
+    );
     allItems = { ...allItems, ...page.items };
     pageCount++;
 
@@ -307,8 +278,8 @@ export async function fetchFullAssetDistribution(
       onProgress(pageCount, Object.keys(allItems).length, page.hasNext);
     }
 
-    if (page.hasNext && page.lastAddress) {
-      after = page.lastAddress;
+    if (page.hasNext && page.lastItem) {
+      after = page.lastItem;
       hasMore = true;
       await new Promise((resolve) => setTimeout(resolve, 100));
     } else {
