@@ -19,10 +19,10 @@ import {
   fetchBlacklistedPeers,
   fetchConnectedPeers,
   fetchSuspendedPeers,
+  type IAllConnectedResponse,
+  type IAllResponse,
   type IBlackPeer,
   type ISuspendedPeer,
-  type PeersAllResponse,
-  type PeersConnectedResponse,
 } from '@/lib/api';
 import type { NodeRegistrationRecord, Peer } from '@/types';
 import { useLanguage } from '../components/contexts/LanguageContext';
@@ -30,8 +30,8 @@ import { fromUnix } from '../components/utils/formatters';
 
 type PeerApiShape =
   | Peer[]
-  | PeersConnectedResponse
-  | PeersAllResponse
+  | IAllConnectedResponse
+  | IAllResponse
   | ISuspendedPeer[]
   | IBlackPeer[]
   | null
@@ -59,7 +59,7 @@ const extractPeers = (data: PeerApiShape): Peer[] => {
     }
     return data as Peer[];
   }
-  return ((data as PeersConnectedResponse | PeersAllResponse).peers as Peer[]) || [];
+  return ((data as IAllConnectedResponse | IAllResponse).peers as Peer[]) || [];
 };
 
 export default function Peers() {
@@ -67,12 +67,12 @@ export default function Peers() {
   const [enrichedPeers, setEnrichedPeers] = useState<Record<string, EnrichedPeerData>>({});
   const [nodeRegistrations, setNodeRegistrations] = useState<NodeRegistrationRecord[]>([]);
 
-  const { data: connected, isLoading: connectedLoading } = useQuery<PeersConnectedResponse>({
+  const { data: connected, isLoading: connectedLoading } = useQuery<IAllConnectedResponse>({
     queryKey: ['peers', 'connected'],
     queryFn: () => fetchConnectedPeers(),
   });
 
-  const { data: all, isLoading: allLoading } = useQuery<PeersAllResponse>({
+  const { data: all, isLoading: allLoading } = useQuery<IAllResponse>({
     queryKey: ['peers', 'all'],
     queryFn: () => fetchAllPeers(),
   });

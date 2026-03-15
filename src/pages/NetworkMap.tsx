@@ -142,7 +142,7 @@ export default function NetworkMap() {
 
                 {geolocatedPeers.map((peer) => (
                   <CircleMarker
-                    key={`${peer.address || peer.nodeName}-${peer.lat}-${peer.lng}`}
+                    key={`${peer.address || peer.peerName}-${peer.lat}-${peer.lng}`}
                     center={[peer.lat, peer.lng]}
                     radius={8}
                     fillColor="#3b82f6"
@@ -154,7 +154,7 @@ export default function NetworkMap() {
                     <Popup>
                       <div className="p-2">
                         <p className="font-semibold text-sm mb-1">
-                          {peer.nodeName || t('unknownNode')}
+                          {peer.peerName || t('unknownNode')}
                         </p>
                         <p className="text-xs text-gray-600 mb-1">
                           <strong>{t('addressColon')}</strong> {peer.address}
@@ -186,11 +186,11 @@ export default function NetworkMap() {
             ) : geolocatedPeers.length > 0 ? (
               geolocatedPeers.map((peer) => (
                 <div
-                  key={`${peer.address || peer.nodeName}-${peer.lat}-${peer.lng}`}
+                  key={`${peer.address || peer.peerName}-${peer.lat}-${peer.lng}`}
                   className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
                 >
                   <div>
-                    <p className="font-medium text-sm">{peer.nodeName || t('unknownNode')}</p>
+                    <p className="font-medium text-sm">{peer.peerName || t('unknownNode')}</p>
                     <p className="text-xs text-gray-500 font-mono">{peer.address}</p>
                   </div>
                   <div className="text-right">

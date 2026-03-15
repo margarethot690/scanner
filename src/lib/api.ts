@@ -6,6 +6,7 @@
  * (served by separate non-node services without SDK equivalents).
  */
 import { create } from '@decentralchain/node-api-js';
+import type { IBalanceDetails } from '@decentralchain/node-api-js/api-node/addresses';
 import type {
   IAssetDistribution,
   TAssetBalance,
@@ -18,9 +19,14 @@ import type {
   INodeStatus as INodeStatusBase,
   INodeVersion,
 } from '@decentralchain/node-api-js/api-node/node';
-import type { IBlackPeer, ISuspendedPeer } from '@decentralchain/node-api-js/api-node/peers';
+import type {
+  IAllConnectedResponse,
+  IAllResponse,
+  IBlackPeer,
+  ISuspendedPeer,
+} from '@decentralchain/node-api-js/api-node/peers';
 import type { TRewards } from '@decentralchain/node-api-js/api-node/rewards';
-import type { Lease, Peer, Transaction } from '@/types';
+import type { Lease, Transaction } from '@/types';
 
 /** Augmented node status – the real API returns extra fields the SDK omits. */
 export interface INodeStatus extends INodeStatusBase {
@@ -28,31 +34,19 @@ export interface INodeStatus extends INodeStatusBase {
   historyReplierEnabled?: boolean;
 }
 
-/** Balance details — SDK's TLong fields arrive as string | number at runtime. */
-export interface IBalanceDetails {
-  address: string;
-  regular: string | number;
-  generating: string | number;
-  available: string | number;
-  effective: string | number;
-}
+/** SDK TLong resolves to string | number at runtime. */
+type TLong = string | number;
 
-/** Blockchain rewards — SDK's TLong fields arrive as string | number at runtime. */
-export interface IRewards {
-  height: number;
-  totalDccAmount: string | number;
-  currentReward: string | number;
-  minIncrement: string | number;
-  term: number;
-  nextCheck: number;
-  votingIntervalStart: number;
-  votingInterval: number;
-  votingThreshold: number;
-  votes: { increase: number; decrease: number };
-}
+/** SDK's IBalanceDetails, parameterized for runtime TLong. */
+export type { IBalanceDetails };
+
+/** SDK's TRewards, parameterized for runtime TLong. */
+export type IRewards = TRewards<TLong>;
 
 // Re-export SDK types for consumers
 export type {
+  IAllConnectedResponse,
+  IAllResponse,
   IAssetDistribution,
   IBlackPeer,
   IBlock,
@@ -157,12 +151,12 @@ export async function fetchActiveLeases(address: string): Promise<Lease[]> {
 }
 
 // Peers
-export async function fetchConnectedPeers(): Promise<PeersConnectedResponse> {
-  return nodeApi.peers.fetchConnected() as Promise<PeersConnectedResponse>;
+export async function fetchConnectedPeers(): Promise<IAllConnectedResponse> {
+  return nodeApi.peers.fetchConnected();
 }
 
-export async function fetchAllPeers(): Promise<PeersAllResponse> {
-  return nodeApi.peers.fetchAll() as Promise<PeersAllResponse>;
+export async function fetchAllPeers(): Promise<IAllResponse> {
+  return nodeApi.peers.fetchAll();
 }
 
 export async function fetchSuspendedPeers(): Promise<ISuspendedPeer[]> {
@@ -184,27 +178,17 @@ export async function fetchNodeVersion(): Promise<INodeVersion> {
 
 // Rewards
 export async function fetchRewards(height?: number): Promise<IRewards> {
-  return nodeApi.rewards.fetchRewards(height) as Promise<IRewards>;
+  return nodeApi.rewards.fetchRewards(height);
 }
 
 // Addresses
-export async function fetchBalanceDetails(address: string): Promise<IBalanceDetails> {
-  return nodeApi.addresses.fetchBalanceDetails(address) as Promise<IBalanceDetails>;
+export async function fetchBalanceDetails(address: string): Promise<IBalanceDetails<TLong>> {
+  return nodeApi.addresses.fetchBalanceDetails(address);
 }
 
 /** Extract typed transactions from a block response. */
 export function getBlockTransactions(block: IBlock): Transaction[] {
   return block.transactions as Transaction[];
-}
-
-// ── Peer response types (matching SDK structure) ───────────────────────
-
-export interface PeersConnectedResponse {
-  peers: Peer[];
-}
-
-export interface PeersAllResponse {
-  peers: Peer[];
 }
 
 // ── Scanner-specific types (not in SDK) ────────────────────────────────

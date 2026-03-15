@@ -16,7 +16,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { PeersConnectedResponse } from '@/lib/api';
+import type { IAllConnectedResponse } from '@/lib/api';
 import {
   fetchBlockHeadersSeq,
   fetchConnectedPeers,
@@ -47,7 +47,7 @@ export default function NetworkStatistics() {
     queryFn: () => fetchNodeVersion(),
   });
 
-  const { data: connectedPeers } = useQuery<PeersConnectedResponse>({
+  const { data: connectedPeers } = useQuery<IAllConnectedResponse>({
     queryKey: ['peers', 'connected'],
     queryFn: () => fetchConnectedPeers(),
   });
